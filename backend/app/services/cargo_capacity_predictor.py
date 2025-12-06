@@ -2,8 +2,10 @@
 Cargo Capacity Prediction Service
 Predicts available cargo capacity (weight and volume) for flights
 """
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional
+from loguru import logger
 from app.services.baggage_predictor import BaggagePredictor
 from app.infrastructure.external.adsbdb_client import ADSBDBClient
 
@@ -63,14 +65,25 @@ class CargoCapacityPredictor:
             Dictionary with capacity specifications
         """
         # Try to get accurate aircraft type from ADSBDB if registration provided
+        # Make this non-blocking and fail gracefully
         if registration:
             try:
-                aircraft_info = await self.adsbdb_client.get_aircraft_for_capacity_calculation(registration)
+                # Add timeout wrapper for extra safety
+                aircraft_info = await asyncio.wait_for(
+                    self.adsbdb_client.get_aircraft_for_capacity_calculation(registration),
+                    timeout=6.0  # Slightly longer than the client timeout
+                )
                 if aircraft_info and aircraft_info.get("aircraft_type"):
                     # Use the more accurate type from ADSBDB
                     aircraft_type = aircraft_info["aircraft_type"]
-            except Exception:
+                    logger.debug(f"Enriched aircraft type from ADSBDB: {aircraft_type}")
+            except asyncio.TimeoutError:
+                logger.debug(f"ADSBDB lookup timed out for {registration}, using provided type: {aircraft_type}")
+            except asyncio.CancelledError:
+                logger.debug(f"ADSBDB lookup cancelled for {registration}, using provided type: {aircraft_type}")
+            except Exception as e:
                 # Fallback to provided type if ADSBDB fails
+                logger.debug(f"ADSBDB lookup failed for {registration}: {e}, using provided type: {aircraft_type}")
                 pass
         
         # Try exact match

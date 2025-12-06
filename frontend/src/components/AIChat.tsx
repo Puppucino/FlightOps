@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import MarkdownRenderer from './MarkdownRenderer'
 import './AIChat.css'
 
 interface Message {
@@ -13,6 +14,8 @@ interface AIChatProps {
   onClose?: () => void
   minimized?: boolean
   onMinimize?: () => void
+  isOpen?: boolean
+  onToggle?: () => void
 }
 
 const AIChat: React.FC<AIChatProps> = ({
@@ -20,16 +23,19 @@ const AIChat: React.FC<AIChatProps> = ({
   flightData,
   onClose,
   minimized = false,
-  onMinimize
+  onMinimize,
+  isOpen = false,
+  onToggle
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I\'m your AI cargo analytics assistant. I can help you:\n\n• Answer questions about flights and cargo capacity\n• Explain predictions and insights\n• Find flights with specific criteria\n• Provide cargo optimization recommendations\n• Generate alerts and reports\n\nHow can I help you today?'
+      content: 'Hello! I\'m your AI cargo analytics assistant. I can help you:\n\n- Answer questions about flights and cargo capacity\n- Explain predictions and insights\n- Find flights with specific criteria\n- Provide cargo optimization recommendations\n- Generate alerts and reports\n\nHow can I help you today?'
     }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [aiStatus, setAiStatus] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -53,6 +59,30 @@ const AIChat: React.FC<AIChatProps> = ({
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setLoading(true)
+    
+    // Determine AI status based on user query
+    const query = userMessage.content.toLowerCase()
+    let status = 'Analyzing your request...'
+    
+    if (query.includes('flight') || query.includes('show') || query.includes('find')) {
+      status = 'Searching flight database...'
+    } else if (query.includes('capacity') || query.includes('cargo') || query.includes('predict')) {
+      status = 'Calculating cargo capacity...'
+    } else if (query.includes('route') || query.includes('statistics') || query.includes('stats')) {
+      status = 'Analyzing route data...'
+    } else if (query.includes('airport') || query.includes('airport')) {
+      status = 'Fetching airport information...'
+    } else if (query.includes('optimize') || query.includes('recommend')) {
+      status = 'Generating recommendations...'
+    } else if (query.includes('explain') || query.includes('why') || query.includes('how')) {
+      status = 'Generating explanation...'
+    } else if (query.includes('risk') || query.includes('alert')) {
+      status = 'Assessing risk levels...'
+    } else {
+      status = 'Processing your query...'
+    }
+    
+    setAiStatus(status)
 
     try {
       const conversationHistory = messages.map(m => ({
@@ -81,10 +111,22 @@ const AIChat: React.FC<AIChatProps> = ({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        // Try to get error details from response
+        let errorMessage = 'Failed to get response'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.detail || errorData.message || errorMessage
+        } catch {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
+      
+      if (!data.response) {
+        throw new Error('Invalid response format from server')
+      }
       
       const assistantMessage: Message = {
         role: 'assistant',
@@ -95,14 +137,16 @@ const AIChat: React.FC<AIChatProps> = ({
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
       console.error('Chat error:', error)
+      const errorText = error instanceof Error ? error.message : 'Unknown error occurred'
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again or rephrase your question.',
+        content: `Sorry, I encountered an error: ${errorText}. Please check your API key configuration or try again later.`,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
       setLoading(false)
+      setAiStatus('')
     }
   }
 
@@ -127,19 +171,25 @@ const AIChat: React.FC<AIChatProps> = ({
     }, 100)
   }
 
-  if (minimized) {
-    return (
-      <div className="ai-chat-minimized" onClick={onMinimize}>
-        <div className="chat-minimized-header">
-          <span>💬 AI Assistant</span>
-          <button className="chat-close-btn" onClick={(e) => { e.stopPropagation(); onClose?.() }}>×</button>
-        </div>
-      </div>
-    )
+  // Don't render minimized state for sidebar mode
+  if (minimized && !isOpen) {
+    return null
   }
 
   return (
-    <div className="ai-chat-container">
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className={`ai-chat-overlay ${isOpen ? 'open' : ''}`}
+          onClick={onToggle}
+          aria-label="Close AI Assistant"
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`ai-chat-sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="ai-chat-container">
       <div className="ai-chat-header">
         <div className="chat-header-left">
           <span className="chat-icon">🤖</span>
@@ -149,8 +199,17 @@ const AIChat: React.FC<AIChatProps> = ({
           </div>
         </div>
         <div className="chat-header-actions">
-          <button className="chat-minimize-btn" onClick={onMinimize} title="Minimize">−</button>
-          <button className="chat-close-btn" onClick={onClose} title="Close">×</button>
+          <button 
+            className="chat-close-btn" 
+            onClick={() => {
+              onClose?.()
+              onToggle?.()
+            }} 
+            title="Close"
+            aria-label="Close AI Assistant"
+          >
+            ×
+          </button>
         </div>
       </div>
 
@@ -162,12 +221,16 @@ const AIChat: React.FC<AIChatProps> = ({
             </div>
             <div className="message-content">
               <div className="message-text">
-                {message.content.split('\n').map((line, i) => (
-                  <React.Fragment key={i}>
-                    {line}
-                    {i < message.content.split('\n').length - 1 && <br />}
-                  </React.Fragment>
-                ))}
+                {message.role === 'assistant' ? (
+                  <MarkdownRenderer content={message.content} />
+                ) : (
+                  message.content.split('\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}
+                      {i < message.content.split('\n').length - 1 && <br />}
+                    </React.Fragment>
+                  ))
+                )}
               </div>
               {message.timestamp && (
                 <div className="message-timestamp">
@@ -182,10 +245,17 @@ const AIChat: React.FC<AIChatProps> = ({
             <div className="message-avatar">🤖</div>
             <div className="message-content">
               <div className="message-text">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div className="ai-status-container">
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  {aiStatus && (
+                    <div className="ai-status-text">
+                      {aiStatus}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -232,7 +302,9 @@ const AIChat: React.FC<AIChatProps> = ({
           {loading ? '⏳' : '➤'}
         </button>
       </div>
-    </div>
+        </div>
+      </div>
+    </>
   )
 }
 

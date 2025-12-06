@@ -3,6 +3,7 @@ ADSBDB.com API Client
 Public API for aircraft, airline, and flight route data
 No API key required!
 """
+import asyncio
 import httpx
 from typing import Optional, Dict, Any
 from loguru import logger
@@ -64,30 +65,43 @@ class ADSBDBClient:
         }
         
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(url, headers=headers)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    # ADSBDB returns data in "response.aircraft" structure
-                    if "response" in data and "aircraft" in data["response"]:
-                        return data["response"]["aircraft"]
-                    return data
-                elif response.status_code == 404:
-                    logger.debug(f"Aircraft {identifier} not found in ADSBDB")
-                    return None
-                else:
-                    logger.warning(f"ADSBDB API returned {response.status_code} for {identifier}")
-                    return None
+            # Use shorter timeout and asyncio timeout wrapper for extra safety
+            timeout_seconds = 5.0  # Reduced from 10 to 5 seconds
+            
+            async def fetch_with_timeout():
+                async with httpx.AsyncClient(timeout=timeout_seconds) as client:
+                    response = await client.get(url, headers=headers)
                     
+                    if response.status_code == 200:
+                        data = response.json()
+                        # ADSBDB returns data in "response.aircraft" structure
+                        if "response" in data and "aircraft" in data["response"]:
+                            return data["response"]["aircraft"]
+                        return data
+                    elif response.status_code == 404:
+                        logger.debug(f"Aircraft {identifier} not found in ADSBDB")
+                        return None
+                    else:
+                        logger.warning(f"ADSBDB API returned {response.status_code} for {identifier}")
+                        return None
+            
+            # Double timeout protection: httpx timeout + asyncio timeout
+            return await asyncio.wait_for(fetch_with_timeout(), timeout=timeout_seconds + 1.0)
+                    
+        except asyncio.TimeoutError:
+            logger.warning(f"Timeout fetching aircraft {identifier} from ADSBDB (asyncio timeout)")
+            return None
         except httpx.TimeoutException:
-            logger.error(f"Timeout fetching aircraft {identifier} from ADSBDB")
+            logger.warning(f"Timeout fetching aircraft {identifier} from ADSBDB (httpx timeout)")
             return None
         except httpx.RequestError as e:
-            logger.error(f"Error fetching aircraft {identifier} from ADSBDB: {e}")
+            logger.warning(f"Request error fetching aircraft {identifier} from ADSBDB: {e}")
+            return None
+        except asyncio.CancelledError:
+            logger.warning(f"Request cancelled for aircraft {identifier} from ADSBDB")
             return None
         except Exception as e:
-            logger.error(f"Unexpected error fetching aircraft {identifier}: {e}")
+            logger.warning(f"Unexpected error fetching aircraft {identifier} from ADSBDB: {e}")
             return None
     
     async def get_aircraft_by_registration(self, registration: str) -> Optional[Dict[str, Any]]:

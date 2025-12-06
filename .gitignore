@@ -41,3 +41,4 @@ build/
 *.egg
 
 assets/
+models/data/flights_weather_2019_cleaned.csv

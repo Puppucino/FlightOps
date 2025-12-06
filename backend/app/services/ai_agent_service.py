@@ -3,6 +3,7 @@ AI Agent Service using DeepSeek API
 Handles conversational AI, natural language queries, and intelligent recommendations
 """
 import json
+import re
 import httpx
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
@@ -19,7 +20,14 @@ class AIAgentService:
         self.api_key = settings.DEEPSEEK_API_KEY
         self.base_url = settings.DEEPSEEK_BASE_URL
         self.model = settings.DEEPSEEK_MODEL
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client = httpx.AsyncClient(timeout=60.0)
+        
+        # Log configuration (without exposing API key)
+        if self.api_key and self.api_key.strip():
+            masked_key = '*' * (len(self.api_key) - 4) + self.api_key[-4:] if len(self.api_key) > 4 else '***'
+            logger.info(f"DeepSeek AI Agent initialized - Model: {self.model}, Base URL: {self.base_url}, API Key: {masked_key}")
+        else:
+            logger.warning("DeepSeek API key is not configured. AI features will not work. Please set DEEPSEEK_API_KEY in .env file.")
         
     async def __aenter__(self):
         return self
@@ -44,6 +52,12 @@ class AIAgentService:
         Returns:
             Generated response text
         """
+        # Validate API key
+        if not self.api_key or self.api_key.strip() == "":
+            error_msg = "DeepSeek API key is not configured. Please set DEEPSEEK_API_KEY in your .env file."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        
         try:
             url = f"{self.base_url}/v1/chat/completions"
             headers = {
@@ -58,18 +72,110 @@ class AIAgentService:
                 "max_tokens": max_tokens
             }
             
-            response = await self.client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
+            logger.debug(f"Calling DeepSeek API: {url} with model {self.model}")
+            
+            response = await self.client.post(url, headers=headers, json=payload, timeout=60.0)
+            
+            # Check status code before parsing
+            if response.status_code != 200:
+                error_text = response.text[:500] if response.text else "No error details"
+                error_msg = f"DeepSeek API returned status {response.status_code}: {error_text}"
+                logger.error(error_msg)
+                
+                # Try to parse error response for better error message
+                try:
+                    error_json = response.json()
+                    if "error" in error_json:
+                        error_detail = error_json["error"].get("message", error_text)
+                        error_code = error_json["error"].get("code", "unknown")
+                        raise Exception(f"DeepSeek API error ({error_code}): {error_detail}")
+                except Exception as parse_error:
+                    # If we already raised an exception with better details, re-raise it
+                    if "DeepSeek API error" in str(parse_error):
+                        raise
+                    # Otherwise, raise the original error message
+                    pass
+                
+                raise Exception(error_msg)
             
             result = response.json()
-            return result["choices"][0]["message"]["content"]
             
+            # Validate response structure
+            if "choices" not in result:
+                error_msg = "Invalid response from DeepSeek API: Missing 'choices' field"
+                logger.error(f"{error_msg}. Response keys: {list(result.keys())}")
+                raise ValueError(error_msg)
+            
+            if len(result["choices"]) == 0:
+                error_msg = "Invalid response from DeepSeek API: Empty choices array"
+                logger.error(f"{error_msg}. Response: {result}")
+                raise ValueError(error_msg)
+            
+            if "message" not in result["choices"][0]:
+                error_msg = "Invalid response from DeepSeek API: Missing 'message' in choice"
+                logger.error(f"{error_msg}. Choice structure: {result['choices'][0]}")
+                raise ValueError(error_msg)
+            
+            if "content" not in result["choices"][0]["message"]:
+                error_msg = "Invalid response from DeepSeek API: Missing 'content' in message"
+                logger.error(f"{error_msg}. Message structure: {result['choices'][0]['message']}")
+                raise ValueError(error_msg)
+            
+            content = result["choices"][0]["message"]["content"]
+            if not content or not isinstance(content, str):
+                error_msg = f"Invalid response from DeepSeek API: Content is not a string (type: {type(content)})"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+            
+            logger.debug(f"Successfully received response from DeepSeek API ({len(content)} characters)")
+            return content
+            
+        except httpx.TimeoutException as e:
+            error_msg = f"DeepSeek API request timed out after 60 seconds: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+        except httpx.HTTPStatusError as e:
+            # Try to extract error details from response
+            error_text = "No error details"
+            status_code = e.response.status_code if hasattr(e, 'response') else "unknown"
+            
+            try:
+                if hasattr(e, 'response') and e.response:
+                    if e.response.text:
+                        error_text = e.response.text[:500]
+                        # Try to parse as JSON
+                        try:
+                            error_json = e.response.json()
+                            if "error" in error_json:
+                                error_detail = error_json["error"]
+                                error_text = error_detail.get("message", error_detail.get("type", error_text))
+                                error_code = error_detail.get("code", "")
+                                if error_code:
+                                    error_text = f"{error_code}: {error_text}"
+                        except:
+                            pass
+            except Exception as parse_err:
+                error_text = f"Error parsing response: {str(parse_err)}"
+            
+            error_msg = f"DeepSeek API HTTP error {status_code}: {error_text}"
+            logger.error(error_msg)
+            logger.debug(f"Full error response: {e.response.text if hasattr(e, 'response') and e.response else 'N/A'}")
+            raise Exception(error_msg)
+        except httpx.RequestError as e:
+            error_msg = f"DeepSeek API request error: {type(e).__name__}: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
         except httpx.HTTPError as e:
-            logger.error(f"DeepSeek API error: {e}")
-            raise Exception(f"AI service error: {str(e)}")
-        except Exception as e:
-            logger.error(f"Unexpected error calling DeepSeek: {e}")
+            error_msg = f"DeepSeek API HTTP error: {type(e).__name__}: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+        except ValueError as e:
+            # Re-raise ValueError as-is (API key validation, response validation)
             raise
+        except Exception as e:
+            error_msg = f"Unexpected error calling DeepSeek API: {type(e).__name__}: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            raise Exception(error_msg)
     
     async def process_natural_language_query(
         self,
@@ -208,7 +314,12 @@ Explain this prediction in natural language."""
             {"role": "user", "content": user_prompt}
         ]
         
-        return await self._call_deepseek(messages, temperature=0.7, max_tokens=300)
+        response = await self._call_deepseek(messages, temperature=0.7, max_tokens=300)
+        
+        # Filter out code blocks and SQL commands
+        filtered_response = self._filter_code_and_sql(response)
+        
+        return filtered_response
     
     async def generate_cargo_recommendations(
         self,
@@ -319,7 +430,12 @@ Generate a clear alert message explaining the issue and recommended action."""
             {"role": "user", "content": user_prompt}
         ]
         
-        return await self._call_deepseek(messages, temperature=0.6, max_tokens=200)
+        response = await self._call_deepseek(messages, temperature=0.6, max_tokens=200)
+        
+        # Filter out code blocks and SQL commands
+        filtered_response = self._filter_code_and_sql(response)
+        
+        return filtered_response
     
     async def chat_conversation(
         self,
@@ -366,14 +482,18 @@ You have FULL ACCESS to all application data, database, and services.
 5. **Explain Insights**: Interpret predictions, explain risk levels, clarify metrics
 6. **Query Database**: Search flights, get statistics, analyze historical data
 
-### Important:
+### Important Response Guidelines:
 - You have access to ALL data in the system
 - You can query the database through the context provider
 - You can call any service or API endpoint
 - Be specific and accurate in your responses
 - Use actual data from the system when available
+- **NEVER include SQL queries, code blocks, or technical implementation details in your responses**
+- **NEVER show database commands, API calls, or system commands**
+- **ONLY provide natural language explanations and insights**
+- **Focus on answering the user's question in plain, conversational language**
 
-Be helpful, professional, and use the comprehensive context provided to give accurate answers."""
+Be helpful, professional, and use the comprehensive context provided to give accurate answers in natural language only."""
 
         messages = [{"role": "system", "content": system_prompt}]
         
@@ -399,7 +519,77 @@ Be helpful, professional, and use the comprehensive context provided to give acc
         # Add current user message
         messages.append({"role": "user", "content": user_message})
         
-        return await self._call_deepseek(messages, temperature=0.7, max_tokens=2500)
+        response = await self._call_deepseek(messages, temperature=0.7, max_tokens=2500)
+        
+        # Filter out code blocks and SQL commands
+        filtered_response = self._filter_code_and_sql(response)
+        
+        return filtered_response
+    
+    def _filter_code_and_sql(self, text: str) -> str:
+        """
+        Remove code blocks, SQL commands, and technical implementation details from AI responses
+        
+        Args:
+            text: Raw AI response text
+            
+        Returns:
+            Filtered text without code blocks or SQL
+        """
+        if not text:
+            return text
+        
+        # Remove code blocks (```code``` or ```language\ncode\n```)
+        text = re.sub(r'```[\s\S]*?```', '', text)
+        
+        # Remove inline code that looks like SQL or commands
+        # Keep simple inline code like `variable_name` but remove SQL/commands
+        lines = text.split('\n')
+        filtered_lines = []
+        
+        for line in lines:
+            # Skip lines that look like SQL commands
+            sql_keywords = [
+                r'^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|GRANT|REVOKE)',
+                r'^\s*(FROM|WHERE|JOIN|INNER|OUTER|LEFT|RIGHT|ON|GROUP BY|ORDER BY|HAVING)',
+                r'^\s*(BEGIN|COMMIT|ROLLBACK|TRANSACTION)',
+                r'^\s*--.*',  # SQL comments
+                r'^\s*/\*.*\*/',  # SQL block comments
+            ]
+            
+            is_sql = any(re.match(pattern, line, re.IGNORECASE) for pattern in sql_keywords)
+            
+            # Skip lines that look like command-line commands
+            is_command = re.match(r'^\s*\$|^\s*#|^\s*>\s*\w+', line)
+            
+            # Skip lines that look like Python/JavaScript code blocks
+            is_code_block = (
+                re.match(r'^\s*(def|class|import|from|const|let|var|function|async|await)\s+', line, re.IGNORECASE) or
+                re.match(r'^\s*(if|for|while|try|except|catch|return|yield)\s+', line, re.IGNORECASE)
+            )
+            
+            # Skip lines that are just code-like patterns
+            if is_sql or is_command or is_code_block:
+                continue
+            
+            # Remove inline code blocks that contain SQL keywords
+            line = re.sub(r'`[^`]*\b(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|JOIN|CREATE|DROP)\b[^`]*`', '', line, flags=re.IGNORECASE)
+            
+            # Remove command-like patterns in text
+            line = re.sub(r'\$\s*\w+.*', '', line)  # Remove $ command patterns
+            line = re.sub(r'#\s*\w+.*', '', line)  # Remove # command patterns
+            
+            filtered_lines.append(line)
+        
+        text = '\n'.join(filtered_lines)
+        
+        # Clean up multiple blank lines
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        # Remove any remaining code-like patterns
+        text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+        
+        return text.strip()
     
     def _summarize_context(self, app_context: Dict[str, Any]) -> str:
         """Summarize application context for AI"""

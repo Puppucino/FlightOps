@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from app.core.database import get_db
 from app.services.ai_agent_service import AIAgentService
@@ -154,8 +155,16 @@ async def chat(
         
         return ChatResponse(response=response)
         
+    except ValueError as e:
+        # API key validation errors
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")
+        error_detail = str(e) if str(e) else f"Unknown error: {type(e).__name__}"
+        logger.error(f"Chat endpoint error: {error_detail}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Chat error: {error_detail}")
 
 
 @router.post("/query", response_model=QueryResponse)

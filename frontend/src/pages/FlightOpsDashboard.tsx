@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { AlertCircle, Cloud, Users, Package, Plane, TrendingUp, Clock, Radio, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { AlertCircle, Cloud, Users, Package, Plane, TrendingUp, Clock, Radio, X, ChevronDown, ChevronUp, Wind, Eye, Thermometer, Gauge } from 'lucide-react';
 import { Layout } from '../components/Layout';
+import { getFlightOperations, FlightOperation, getWeatherData, getTrafficData, WeatherData, TrafficData } from '../api/flightService';
 import './FlightOpsDashboard.css';
 
 interface Alert {
@@ -13,16 +14,7 @@ interface Alert {
   message?: string;
 }
 
-interface Flight {
-  id: string;
-  status: string;
-  delay: number;
-  gate: string;
-  eta: string;
-  risk: number;
-  weather: string;
-  traffic: string;
-}
+// Flight interface is now imported from flightService
 
 interface PassengerData {
   hour: string;
@@ -39,21 +31,116 @@ interface CargoData {
 
 const FlightOpsDashboard = () => {
   const [activeTab, setActiveTab] = useState('delays');
-  const [alerts] = useState<Alert[]>([
-    { id: 1, flight: 'AK546', type: 'delay', risk: 78, time: '2 min ago', severity: 'high' },
-    { id: 2, type: 'weather', message: 'Weather disruption predicted at 3:40 PM', time: '5 min ago', severity: 'medium' },
-    { id: 3, type: 'gate', message: 'Gate clash detected between AK310 and AK312', time: '8 min ago', severity: 'high' }
-  ]);
+  const [flights, setFlights] = useState<FlightOperation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedFlights, setExpandedFlights] = useState<Set<string>>(new Set());
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<number>>(new Set());
+  
+  // Weather and Traffic data
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+  const [trafficData, setTrafficData] = useState<TrafficData[]>([]);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [trafficLoading, setTrafficLoading] = useState(false);
 
-  const [flights] = useState<Flight[]>([
-    { id: 'AK546', status: 'At Risk', delay: 45, gate: 'A12', eta: '14:30', risk: 78, weather: 'Moderate', traffic: 'High' },
-    { id: 'AK310', status: 'On Time', delay: 0, gate: 'B5', eta: '15:15', risk: 12, weather: 'Clear', traffic: 'Normal' },
-    { id: 'AK312', status: 'Warning', delay: 15, gate: 'B5', eta: '15:20', risk: 45, weather: 'Clear', traffic: 'Normal' },
-    { id: 'AK789', status: 'On Time', delay: 0, gate: 'C8', eta: '16:00', risk: 8, weather: 'Clear', traffic: 'Low' }
-  ]);
+  // Generate alerts based on real flight data
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
+  // Fetch flight operations data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getFlightOperations();
+        setFlights(data);
+        
+        // Generate alerts from flight data
+        const newAlerts: Alert[] = [];
+        data.forEach((flight, index) => {
+          if (flight.risk >= 70) {
+            newAlerts.push({
+              id: index + 1,
+              flight: flight.id,
+              type: 'delay',
+              risk: flight.risk,
+              time: 'Just now',
+              severity: 'high'
+            });
+          }
+        });
+        
+        // Add weather and gate alerts (simplified)
+        if (data.length > 1) {
+          newAlerts.push({
+            id: data.length + 1,
+            type: 'weather',
+            message: 'Weather conditions monitored',
+            time: '5 min ago',
+            severity: 'medium'
+          });
+        }
+        
+        setAlerts(newAlerts);
+      } catch (err) {
+        console.error('Failed to load flight operations:', err);
+        setError('Failed to load flight operations data');
+        // Fallback to empty state
+        setFlights([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch weather data when weather tab is active
+  useEffect(() => {
+    if (activeTab === 'weather') {
+      const fetchWeather = async () => {
+        try {
+          setWeatherLoading(true);
+          const data = await getWeatherData();
+          setWeatherData(data.weather_data);
+        } catch (err) {
+          console.error('Failed to load weather data:', err);
+        } finally {
+          setWeatherLoading(false);
+        }
+      };
+      fetchWeather();
+      // Refresh weather every 5 minutes
+      const interval = setInterval(fetchWeather, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab]);
+
+  // Fetch traffic data when traffic tab is active
+  useEffect(() => {
+    if (activeTab === 'traffic') {
+      const fetchTraffic = async () => {
+        try {
+          setTrafficLoading(true);
+          const data = await getTrafficData();
+          setTrafficData(data.traffic_data);
+        } catch (err) {
+          console.error('Failed to load traffic data:', err);
+        } finally {
+          setTrafficLoading(false);
+        }
+      };
+      fetchTraffic();
+      // Refresh traffic every 2 minutes
+      const interval = setInterval(fetchTraffic, 2 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab]);
+
+  // Generate passenger data from flights (simplified)
   const passengerData: PassengerData[] = [
     { hour: '08:00', expected: 245, actual: 238 },
     { hour: '10:00', expected: 380, actual: 392 },
@@ -63,12 +150,18 @@ const FlightOpsDashboard = () => {
     { hour: '18:00', expected: 420, actual: 0 }
   ];
 
-  const cargoData: CargoData[] = [
-    { flight: 'AK546', weight: 4200, capacity: 5000, utilization: 84 },
-    { flight: 'AK310', weight: 3800, capacity: 5000, utilization: 76 },
-    { flight: 'AK312', weight: 4500, capacity: 5000, utilization: 90 },
-    { flight: 'AK789', weight: 2900, capacity: 5000, utilization: 58 }
-  ];
+  // Generate cargo data from flights
+  const cargoData: CargoData[] = flights.slice(0, 10).map((flight, idx) => {
+    const baseWeight = 3000 + (idx * 200);
+    const capacity = 5000;
+    const utilization = Math.min(95, 50 + (flight.risk / 2));
+    return {
+      flight: flight.id,
+      weight: Math.round(baseWeight * (utilization / 100)),
+      capacity: capacity,
+      utilization: Math.round(utilization)
+    };
+  });
 
   const toggleFlightExpansion = (flightId: string) => {
     setExpandedFlights(prev => {
@@ -145,9 +238,12 @@ const FlightOpsDashboard = () => {
                   <div className="flight-ops-flight-icon">
                     <Plane className="w-6 h-6 text-blue-400" aria-hidden="true" />
                   </div>
-                  <div className="flight-ops-flight-details">
+                    <div className="flight-ops-flight-details">
                     <h3>{flight.id}</h3>
                     <p>Gate {flight.gate} • ETA {flight.eta}</p>
+                    {flight.origin && flight.destination && (
+                      <p className="text-xs text-slate-400 mt-1">{flight.origin} → {flight.destination}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-[10px]">
@@ -192,7 +288,9 @@ const FlightOpsDashboard = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-700/30 rounded-lg p-3">
                       <p className="text-xs text-slate-400 mb-1">Route</p>
-                      <p className="text-sm font-semibold text-white">KUL → SIN</p>
+                      <p className="text-sm font-semibold text-white">
+                        {flight.origin && flight.destination ? `${flight.origin} → ${flight.destination}` : 'N/A'}
+                      </p>
                     </div>
                     <div className="bg-slate-700/30 rounded-lg p-3">
                       <p className="text-xs text-slate-400 mb-1">Aircraft</p>
@@ -266,6 +364,221 @@ const FlightOpsDashboard = () => {
     </section>
   );
 
+  const renderWeatherTab = () => (
+    <section>
+      {weatherLoading ? (
+        <div className="text-center py-12" role="status" aria-live="polite">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading weather data...</p>
+        </div>
+      ) : weatherData.length === 0 ? (
+        <div className="text-center py-12" role="status" aria-live="polite">
+          <Cloud className="w-16 h-16 text-slate-600 mx-auto mb-4 opacity-50" aria-hidden="true" />
+          <p className="text-slate-400">No weather data available</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {weatherData.map((weather, idx) => (
+            <article
+              key={weather.airport_code}
+              className="bg-slate-800/50 rounded-lg p-6 border border-slate-700/50 hover:border-slate-600 transition-all"
+              style={{ animationDelay: `${idx * 100}ms` }}
+              role="article"
+              aria-label={`Weather for ${weather.airport_code}`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white">{weather.airport_code}</h3>
+                  <p className="text-sm text-slate-400">{weather.airport_name}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  weather.conditions === 'Clear' ? 'bg-blue-500/20' :
+                  weather.conditions === 'Rain' ? 'bg-blue-600/20' :
+                  weather.conditions === 'Thunderstorm' ? 'bg-purple-600/20' :
+                  'bg-slate-700/20'
+                }`}>
+                  <Cloud className={`w-6 h-6 ${
+                    weather.conditions === 'Clear' ? 'text-blue-400' :
+                    weather.conditions === 'Rain' ? 'text-blue-500' :
+                    weather.conditions === 'Thunderstorm' ? 'text-purple-400' :
+                    'text-slate-400'
+                  }`} aria-hidden="true" />
+                </div>
+              </div>
+
+              {weather.error ? (
+                <div className="text-yellow-400 text-sm mb-2">⚠️ {weather.error}</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Thermometer className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <div>
+                        <p className="text-xs text-slate-400">Temperature</p>
+                        <p className="text-sm font-semibold text-white">
+                          {weather.temperature !== null ? `${Math.round(weather.temperature)}°C` : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Wind className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <div>
+                        <p className="text-xs text-slate-400">Wind Speed</p>
+                        <p className="text-sm font-semibold text-white">
+                          {weather.wind_speed !== null ? `${Math.round(weather.wind_speed)} km/h` : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <div>
+                        <p className="text-xs text-slate-400">Visibility</p>
+                        <p className="text-sm font-semibold text-white">
+                          {weather.visibility !== null ? `${weather.visibility.toFixed(1)} km` : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Gauge className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <div>
+                        <p className="text-xs text-slate-400">Pressure</p>
+                        <p className="text-sm font-semibold text-white">
+                          {weather.pressure !== null ? `${Math.round(weather.pressure)} mb` : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-700/50">
+                    <p className="text-xs text-slate-400 mb-1">Conditions</p>
+                    <p className="text-sm font-semibold text-white">{weather.conditions}</p>
+                    {weather.wind_direction !== null && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        Wind: {weather.wind_direction}°
+                      </p>
+                    )}
+                    {weather.last_updated && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        Updated: {new Date(weather.last_updated).toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+
+  const renderTrafficTab = () => (
+    <section>
+      {trafficLoading ? (
+        <div className="text-center py-12" role="status" aria-live="polite">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading traffic data...</p>
+        </div>
+      ) : trafficData.length === 0 ? (
+        <div className="text-center py-12" role="status" aria-live="polite">
+          <TrendingUp className="w-16 h-16 text-slate-600 mx-auto mb-4 opacity-50" aria-hidden="true" />
+          <p className="text-slate-400">No traffic data available</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {trafficData.map((traffic, idx) => {
+            const utilizationColor = 
+              traffic.utilization_percent >= 80 ? 'text-red-400' :
+              traffic.utilization_percent >= 50 ? 'text-yellow-400' :
+              'text-green-400';
+            
+            const trafficLevelColor =
+              traffic.traffic_level === 'High' ? 'bg-red-500/20 border-red-500/30' :
+              traffic.traffic_level === 'Moderate' ? 'bg-yellow-500/20 border-yellow-500/30' :
+              'bg-green-500/20 border-green-500/30';
+
+            return (
+              <article
+                key={traffic.airport_code}
+                className={`bg-slate-800/50 rounded-lg p-6 border ${trafficLevelColor} hover:border-opacity-50 transition-all`}
+                style={{ animationDelay: `${idx * 100}ms` }}
+                role="article"
+                aria-label={`Traffic for ${traffic.airport_code}`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{traffic.airport_code}</h3>
+                    <p className="text-sm text-slate-400">{traffic.airport_name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-2xl font-bold ${utilizationColor}`}>
+                      {traffic.utilization_percent}%
+                    </p>
+                    <p className="text-xs text-slate-400">Utilization</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Next Hour</p>
+                    <div className="flex items-center gap-2">
+                      <Plane className="w-4 h-4 text-blue-400 rotate-90" aria-hidden="true" />
+                      <p className="text-sm font-semibold text-white">
+                        {traffic.departures_next_hour} departures
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Plane className="w-4 h-4 text-green-400 -rotate-90" aria-hidden="true" />
+                      <p className="text-sm font-semibold text-white">
+                        {traffic.arrivals_next_hour} arrivals
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Total ({traffic.time_window_hours}h)</p>
+                    <p className="text-sm font-semibold text-white">
+                      {traffic.total_departures} departures
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {traffic.total_arrivals} arrivals
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Capacity</p>
+                    <p className="text-sm font-semibold text-white">
+                      {traffic.capacity} movements/hour
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Traffic Level</p>
+                    <p className={`text-sm font-semibold ${
+                      traffic.traffic_level === 'High' ? 'text-red-400' :
+                      traffic.traffic_level === 'Moderate' ? 'text-yellow-400' :
+                      'text-green-400'
+                    }`}>
+                      {traffic.traffic_level}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="relative h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                  <div
+                    className={`absolute h-full rounded-full transition-all ${
+                      traffic.utilization_percent >= 80 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                      traffic.utilization_percent >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                      'bg-gradient-to-r from-green-500 to-green-600'
+                    }`}
+                    style={{ width: `${Math.min(100, traffic.utilization_percent)}%` }}
+                  />
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+
   const renderCargoTab = () => (
     <section>
       {cargoData.map((cargo, idx) => (
@@ -314,6 +627,21 @@ const FlightOpsDashboard = () => {
     { id: 'traffic', label: 'Traffic', icon: TrendingUp }
   ];
 
+  if (loading) {
+    return (
+      <Layout>
+        <main className="flight-ops-container" role="main">
+          <div className="flight-ops-wrapper">
+            <div className="text-center py-12" role="status" aria-live="polite">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-slate-400">Loading flight operations...</p>
+            </div>
+          </div>
+        </main>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <main className="flight-ops-container" role="main">
@@ -324,6 +652,11 @@ const FlightOpsDashboard = () => {
               Flight Operations Command Center
             </h1>
             <p className="flight-ops-subtitle">Real-time monitoring and predictive analytics</p>
+            {error && (
+              <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm">
+                {error}
+              </div>
+            )}
           </header>
 
           {/* Alerts Section */}
@@ -415,18 +748,8 @@ const FlightOpsDashboard = () => {
             {activeTab === 'delays' && renderDelaysTab()}
             {activeTab === 'passengers' && renderPassengersTab()}
             {activeTab === 'cargo' && renderCargoTab()}
-            {activeTab === 'weather' && (
-              <div className="text-center py-12" role="status" aria-live="polite">
-                <Cloud className="w-16 h-16 text-slate-600 mx-auto mb-4 animate-pulse" aria-hidden="true" />
-                <p className="text-slate-400">Weather module coming soon</p>
-              </div>
-            )}
-            {activeTab === 'traffic' && (
-              <div className="text-center py-12" role="status" aria-live="polite">
-                <TrendingUp className="w-16 h-16 text-slate-600 mx-auto mb-4 animate-pulse" aria-hidden="true" />
-                <p className="text-slate-400">Traffic analytics coming soon</p>
-              </div>
-            )}
+            {activeTab === 'weather' && renderWeatherTab()}
+            {activeTab === 'traffic' && renderTrafficTab()}
           </div>
         </div>
       </main>

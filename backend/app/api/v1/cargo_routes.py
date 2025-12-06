@@ -1,9 +1,11 @@
 """API v1 routes for cargo capacity prediction"""
+import asyncio
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, date, timedelta
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from app.core.database import get_db
 from app.services.ml_service import MLService
@@ -471,20 +473,36 @@ async def get_cargo_calendar(
                     days_before = (flight_date - today).days
                     days_before = max(0, days_before)  # Don't use negative days
                     
-                    aircraft_registration = aircraft.registration if aircraft else None
-                    cargo_prediction = await ml_service.predict_available_cargo_capacity(
-                        aircraft_type=aircraft_type_str,
-                        passenger_count=traffic_est["estimated_passenger_count"],
-                        origin=origin.iata_code,
-                        destination=dest.iata_code,
-                        flight_date=flight.scheduled_departure,
-                        fuel_weight_kg=float(flight.fuel_weight_kg) if flight.fuel_weight_kg else None,
-                        days_before_flight=days_before,
-                        aircraft_registration=aircraft_registration
+                    # Skip ADSBDB lookup for calendar to avoid timeouts
+                    # Calendar endpoint processes many flights, so we skip external API calls
+                    aircraft_registration = None  # Don't use ADSBDB for calendar endpoint
+                    
+                    # Add timeout wrapper to prevent hanging
+                    cargo_prediction = await asyncio.wait_for(
+                        ml_service.predict_available_cargo_capacity(
+                            aircraft_type=aircraft_type_str,
+                            passenger_count=traffic_est["estimated_passenger_count"],
+                            origin=origin.iata_code,
+                            destination=dest.iata_code,
+                            flight_date=flight.scheduled_departure,
+                            fuel_weight_kg=float(flight.fuel_weight_kg) if flight.fuel_weight_kg else None,
+                            days_before_flight=days_before,
+                            aircraft_registration=aircraft_registration
+                        ),
+                        timeout=5.0  # 5 second timeout for prediction (no ADSBDB lookup)
                     )
+                except asyncio.TimeoutError:
+                    # If prediction times out, continue without it
+                    logger.warning(f"Prediction timed out for flight {flight.id}, continuing without cargo prediction")
+                    cargo_prediction = None
+                except asyncio.CancelledError:
+                    # If cancelled, continue without prediction
+                    logger.warning(f"Prediction cancelled for flight {flight.id}, continuing without cargo prediction")
+                    cargo_prediction = None
                 except Exception as e:
                     # If prediction fails, continue without it
-                    print(f"Warning: Failed to predict cargo for flight {flight.id}: {e}")
+                    logger.warning(f"Failed to predict cargo for flight {flight.id}: {e}")
+                    cargo_prediction = None
             
             result.append({
                 "flight_id": str(flight.id),

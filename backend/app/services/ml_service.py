@@ -19,8 +19,11 @@ class MLService:
         self.baggage_predictor = BaggagePredictor()
         self.cargo_capacity_predictor = CargoCapacityPredictor(self.baggage_predictor)
         
+        # Initialize ML delay predictor
+        from app.services.ml_delay_predictor import MLDelayPredictor
+        self.ml_delay_predictor = MLDelayPredictor()
+        
         # Other models (to be implemented)
-        self.delay_model = None
         self.cargo_model = None
         self.passenger_traffic_model = None
     
@@ -34,6 +37,8 @@ class MLService:
         """
         Predict flight delay based on various factors
         
+        Uses ML model if available, otherwise falls back to rule-based.
+        
         Args:
             weather_data: Weather conditions data
             flight_route: Flight route information
@@ -43,7 +48,51 @@ class MLService:
         Returns:
             Prediction results with delay probability and estimated delay time
         """
-        # Rule-based delay prediction (can be enhanced with ML model later)
+        # Try ML prediction first
+        if self.ml_delay_predictor.is_available():
+            try:
+                # Convert weather data format
+                departure_weather = {
+                    'temperature_celsius': weather_data.get('temperature_celsius'),
+                    'dewpoint_celsius': weather_data.get('dewpoint_celsius'),
+                    'visibility_miles': weather_data.get('visibility_km', 0) * 0.621371 if weather_data.get('visibility_km') else weather_data.get('visibility_miles'),
+                    'wind_speed_knots': weather_data.get('wind_speed_kmh', 0) * 0.539957 if weather_data.get('wind_speed_kmh') else weather_data.get('wind_speed_knots'),
+                    'pressure_mb': weather_data.get('pressure_hpa'),
+                }
+                
+                flight_data = {
+                    'scheduled_departure': flight_route.get('scheduled_departure'),
+                    'origin_airport': flight_route.get('origin', 'KJFK'),
+                    'destination_airport': flight_route.get('destination', 'KLAX'),
+                    'airline_code': flight_route.get('airline_code', 'AA'),
+                    'distance_km': flight_route.get('distance_km', 1000),
+                    'elapsed_time_minutes': flight_route.get('elapsed_time_minutes', 120),
+                    'taxi_in_minutes': 5,
+                    'taxi_out_minutes': 10,
+                }
+                
+                ml_result = self.ml_delay_predictor.predict(flight_data, departure_weather)
+                
+                # Convert to expected format
+                estimated_delay = ml_result.get('predicted_delay_minutes', 0)
+                confidence = ml_result.get('confidence_score', 0.7)
+                delay_probability = min(0.95, estimated_delay / 120.0) if estimated_delay > 0 else 0.0
+                
+                return {
+                    "delay_probability": round(delay_probability, 2),
+                    "estimated_delay_minutes": int(estimated_delay),
+                    "confidence": round(confidence, 2),
+                    "factors": {
+                        "weather_impact": True,
+                        "traffic_impact": airport_traffic is not None,
+                        "route_impact": flight_route.get('distance_km', 0) > 0,
+                        "model_type": "ml_ensemble"
+                    }
+                }
+            except Exception as e:
+                print(f"ML prediction failed, using fallback: {e}")
+        
+        # Fallback to rule-based prediction
         delay_probability = 0.0
         estimated_delay = 0
         confidence = 0.5

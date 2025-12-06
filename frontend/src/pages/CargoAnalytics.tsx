@@ -20,7 +20,6 @@ const CargoAnalytics: React.FC = () => {
   const [daysBeforeFlight, setDaysBeforeFlight] = useState<number>(0)
   const [predictionData, setPredictionData] = useState<any>(null)
   const [showChat, setShowChat] = useState(false)
-  const [chatMinimized, setChatMinimized] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -550,27 +549,24 @@ const CargoAnalytics: React.FC = () => {
         </Card>
       )}
 
-      {/* AI Chat Component */}
-      {showChat ? (
-        <div className="ai-chat-wrapper">
-          <AIChat
-            flightId={flightId || flightNumber}
-            flightData={analyticsData?.flight}
-            minimized={chatMinimized}
-            onMinimize={() => setChatMinimized(!chatMinimized)}
-            onClose={() => setShowChat(false)}
-          />
-        </div>
-      ) : (
+      {/* AI Chat Sidebar */}
+      <AIChat
+        flightId={flightId || flightNumber}
+        flightData={analyticsData?.flight}
+        onClose={() => setShowChat(false)}
+        isOpen={showChat}
+        onToggle={() => setShowChat(!showChat)}
+      />
+
+      {/* Toggle Button */}
+      {!showChat && (
         <button
-          className="ai-chat-toggle-btn"
-          onClick={() => {
-            setShowChat(true)
-            setChatMinimized(false)
-          }}
-          title="Open AI Assistant"
+          className={`ai-chat-toggle-btn ${showChat ? 'open' : ''}`}
+          onClick={() => setShowChat(true)}
+          aria-label="Open AI Assistant"
         >
-          🤖 AI Assistant
+          <span>🤖</span>
+          <span>AI Assistant</span>
         </button>
       )}
     </main>

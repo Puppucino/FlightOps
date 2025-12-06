@@ -100,11 +100,12 @@ class FlightDelayPredictionService:
                 self.event_bus.publish(weather_event)
                 self.airport_repository.save(arrival_airport)
         
-        # Generate prediction
+        # Generate prediction (pass flight data for ML model)
         prediction = self.prediction_engine.predict_delay(
             request,
             departure_weather,
-            arrival_weather
+            arrival_weather,
+            flight_data=self._extract_flight_data(flight)
         )
         
         # Record prediction in aggregate (publishes events)
@@ -126,4 +127,53 @@ class FlightDelayPredictionService:
         # For now, we'll need to track predictions separately or replay events
         # This is a simplified version
         return None
+    
+    def _extract_flight_data(self, flight) -> dict:
+        """Extract flight data for ML model"""
+        # Calculate elapsed time from scheduled times
+        elapsed_minutes = None
+        if hasattr(flight, 'scheduled_departure') and hasattr(flight, 'scheduled_arrival'):
+            if flight.scheduled_departure and flight.scheduled_arrival:
+                delta = flight.scheduled_arrival - flight.scheduled_departure
+                elapsed_minutes = int(delta.total_seconds() / 60)
+        
+        # Get airline code from relationship if available (SQLAlchemy model)
+        airline_code = 'AA'  # Default
+        if hasattr(flight, 'airline') and flight.airline:
+            if hasattr(flight.airline, 'iata_code') and flight.airline.iata_code:
+                airline_code = flight.airline.iata_code
+            elif hasattr(flight.airline, 'icao_code') and flight.airline.icao_code:
+                airline_code = flight.airline.icao_code
+        
+        # Get airport codes - try entity first, then model
+        origin_code = None
+        dest_code = None
+        
+        # Entity format (domain/entities/flight.py)
+        if hasattr(flight, 'departure_airport'):
+            origin_code = flight.departure_airport
+        if hasattr(flight, 'arrival_airport'):
+            dest_code = flight.arrival_airport
+        
+        # Model format (models/flight.py) - try relationships
+        if not origin_code and hasattr(flight, 'origin_airport') and flight.origin_airport:
+            origin_code = getattr(flight.origin_airport, 'icao_code', None) or getattr(flight.origin_airport, 'iata_code', None)
+        if not dest_code and hasattr(flight, 'destination_airport') and flight.destination_airport:
+            dest_code = getattr(flight.destination_airport, 'icao_code', None) or getattr(flight.destination_airport, 'iata_code', None)
+        
+        # Get distance
+        distance_km = 1000  # Default
+        if hasattr(flight, 'distance_km') and flight.distance_km:
+            distance_km = float(flight.distance_km)
+        
+        return {
+            'scheduled_departure': getattr(flight, 'scheduled_departure', None),
+            'origin_airport': origin_code or 'KJFK',
+            'destination_airport': dest_code or 'KLAX',
+            'airline_code': airline_code,
+            'distance_km': distance_km,
+            'elapsed_time_minutes': elapsed_minutes or 120,
+            'taxi_in_minutes': 5,  # Default
+            'taxi_out_minutes': 10,  # Default
+        }
 

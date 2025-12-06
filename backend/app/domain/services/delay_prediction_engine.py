@@ -4,22 +4,34 @@ from ..value_objects.weather_observation import WeatherObservation
 from ..value_objects.delay_prediction import DelayPrediction
 from ..value_objects.prediction_request import PredictionRequest
 from .weather_impact_analyzer import WeatherImpactAnalyzer
+from ...services.ml_delay_predictor import MLDelayPredictor
 
 
 class DelayPredictionEngine:
     """Engine for predicting flight delays based on weather conditions"""
     
-    def __init__(self):
+    def __init__(self, use_ml: bool = True):
+        """
+        Initialize delay prediction engine
+        
+        Args:
+            use_ml: If True, use ML model when available; otherwise use rule-based
+        """
         self.weather_analyzer = WeatherImpactAnalyzer()
+        self.ml_predictor = MLDelayPredictor()
+        self.use_ml = use_ml and self.ml_predictor.is_available()
     
     def predict_delay(
         self,
         request: PredictionRequest,
         departure_weather: WeatherObservation,
-        arrival_weather: Optional[WeatherObservation] = None
+        arrival_weather: Optional[WeatherObservation] = None,
+        flight_data: Optional[dict] = None
     ) -> DelayPrediction:
         """
         Predict delay based on weather conditions
+        
+        Uses ML model if available, otherwise falls back to rule-based prediction.
         
         Args:
             request: Prediction request with flight details
@@ -29,12 +41,92 @@ class DelayPredictionEngine:
         Returns:
             Delay prediction with estimated delay minutes and confidence
         """
+        # Try ML prediction first if available
+        if self.use_ml:
+            try:
+                ml_result = self._predict_with_ml(request, departure_weather, arrival_weather, flight_data)
+                if ml_result:
+                    return ml_result
+            except Exception as e:
+                # Fall back to rule-based if ML fails
+                print(f"ML prediction failed, using rule-based: {e}")
+        
+        # Fallback to rule-based prediction
+        return self._predict_rule_based(request, departure_weather, arrival_weather)
+    
+    def _predict_with_ml(
+        self,
+        request: PredictionRequest,
+        departure_weather: WeatherObservation,
+        arrival_weather: Optional[WeatherObservation] = None,
+        flight_data: Optional[dict] = None
+    ) -> Optional[DelayPrediction]:
+        """Predict delay using ML model"""
+        # Convert WeatherObservation to dict format
+        departure_weather_dict = self._weather_to_dict(departure_weather)
+        arrival_weather_dict = self._weather_to_dict(arrival_weather) if arrival_weather else None
+        
+        # Prepare flight data (use provided or create default)
+        if not flight_data:
+            flight_data = {
+                'scheduled_departure': request.scheduled_departure,
+                'origin_airport': request.departure_airport,
+                'destination_airport': request.arrival_airport,
+                'airline_code': 'AA',
+                'distance_km': 1000,
+                'elapsed_time_minutes': 120,
+                'taxi_in_minutes': 5,
+                'taxi_out_minutes': 10,
+            }
+        else:
+            # Ensure required fields are present
+            flight_data.setdefault('scheduled_departure', request.scheduled_departure)
+            flight_data.setdefault('origin_airport', request.departure_airport)
+            flight_data.setdefault('destination_airport', request.arrival_airport)
+        
+        # Get ML prediction
+        ml_result = self.ml_predictor.predict(
+            flight_data,
+            departure_weather_dict,
+            arrival_weather_dict
+        )
+        
+        # Convert to DelayPrediction
+        # Calculate weather impact score from weather conditions
+        departure_impact = self.weather_analyzer.analyze(departure_weather)
+        weather_impact_score = departure_impact["overall_impact"]
+        
+        if arrival_weather:
+            arrival_impact = self.weather_analyzer.analyze(arrival_weather)
+            weather_impact_score = max(weather_impact_score, arrival_impact["overall_impact"])
+        
+        # Generate reason
+        reason = self._generate_reason(departure_impact, arrival_impact if arrival_weather else None)
+        
+        return DelayPrediction(
+            flight_id=request.flight_id,
+            predicted_delay_minutes=ml_result["predicted_delay_minutes"],
+            confidence_score=ml_result["confidence_score"],
+            prediction_timestamp=request.request_timestamp,
+            prediction_horizon_minutes=request.prediction_horizon_minutes,
+            weather_impact_score=weather_impact_score,
+            reason=reason
+        )
+    
+    def _predict_rule_based(
+        self,
+        request: PredictionRequest,
+        departure_weather: WeatherObservation,
+        arrival_weather: Optional[WeatherObservation] = None
+    ) -> DelayPrediction:
+        """Fallback rule-based prediction"""
         # Analyze departure weather impact
         departure_impact = self.weather_analyzer.analyze(departure_weather)
         departure_score = departure_impact["overall_impact"]
         
         # Analyze arrival weather impact if provided
         arrival_score = 0.0
+        arrival_impact = None
         if arrival_weather:
             arrival_impact = self.weather_analyzer.analyze(arrival_weather)
             arrival_score = arrival_impact["overall_impact"]
@@ -49,7 +141,7 @@ class DelayPredictionEngine:
         confidence = self._calculate_confidence(weather_impact_score, departure_weather)
         
         # Generate reason for prediction
-        reason = self._generate_reason(departure_impact, arrival_impact if arrival_weather else None)
+        reason = self._generate_reason(departure_impact, arrival_impact)
         
         return DelayPrediction(
             flight_id=request.flight_id,
@@ -60,6 +152,19 @@ class DelayPredictionEngine:
             weather_impact_score=weather_impact_score,
             reason=reason
         )
+    
+    def _weather_to_dict(self, weather: WeatherObservation) -> dict:
+        """Convert WeatherObservation to dictionary format"""
+        return {
+            'temperature_celsius': weather.temperature_celsius,
+            'dewpoint_celsius': weather.dewpoint_celsius,
+            'visibility_miles': weather.visibility_miles,
+            'wind_speed_knots': weather.wind_speed_knots,
+            'wind_gust_knots': weather.wind_gust_knots,
+            'pressure_mb': weather.pressure_mb,
+            'ceiling_feet': weather.ceiling_feet,
+            'weather_conditions': weather.weather_conditions,
+        }
     
     def _calculate_delay_minutes(self, impact_score: float) -> int:
         """

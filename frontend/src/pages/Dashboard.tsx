@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { FlightCard } from "../components/FlightCard"
 import { StatCard } from "../components/StatCard"
 import { Layout } from "../components/Layout"
 import { mockFlights } from "../data/mockFlights"
 import { Flight } from "../types"
+import { getDashboardFlights } from "../api/flightService"
 import './Dashboard.css'
 
 type RiskFilter = "all" | "high" | "medium" | "low"
@@ -15,19 +16,70 @@ export const Dashboard = () => {
   const [riskFilter] = useState<RiskFilter>("all")
   const [sortBy] = useState<SortOption>("delay")
   const [groupBy] = useState<GroupBy>("status")
+  const [flights, setFlights] = useState<Flight[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const flights = mockFlights
+  // Fetch flights from API
+  useEffect(() => {
+    const fetchFlights = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await getDashboardFlights()
+        console.log('Loaded flights from API:', data.length, data)
+        if (data && data.length > 0) {
+          setFlights(data)
+        } else {
+          console.warn('API returned empty array, using mock data')
+          setError('No flights found in database. Using mock data for demonstration.')
+          setFlights(mockFlights)
+        }
+      } catch (err) {
+        console.error('Failed to load flights, using mock data:', err)
+        setError('Failed to load flights from API, using mock data')
+        // Fallback to mock data
+        setFlights(mockFlights)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const stats = {
-    total: flights.length,
-    highRisk: flights.filter(f => f.delayPrediction.delay_probability >= 0.6).length,
-    mediumRisk: flights.filter(f => f.delayPrediction.delay_probability >= 0.3 && f.delayPrediction.delay_probability < 0.6).length,
-    lowRisk: flights.filter(f => f.delayPrediction.delay_probability < 0.3).length,
-    avgDelay: Math.round(flights.reduce((sum, f) => sum + f.delayPrediction.estimated_delay_minutes, 0) / flights.length)
-  }
+    fetchFlights()
+  }, [])
+
+  const stats = useMemo(() => {
+    if (flights.length === 0) {
+      return {
+        total: 0,
+        highRisk: 0,
+        mediumRisk: 0,
+        lowRisk: 0,
+        avgDelay: 0
+      }
+    }
+    return {
+      total: flights.length,
+      highRisk: flights.filter(f => f.delayPrediction?.delay_probability >= 0.6).length,
+      mediumRisk: flights.filter(f => {
+        const prob = f.delayPrediction?.delay_probability ?? 0
+        return prob >= 0.3 && prob < 0.6
+      }).length,
+      lowRisk: flights.filter(f => (f.delayPrediction?.delay_probability ?? 0) < 0.3).length,
+      avgDelay: Math.round(
+        flights.reduce((sum, f) => sum + (f.delayPrediction?.estimated_delay_minutes ?? 0), 0) / flights.length
+      ) || 0
+    }
+  }, [flights])
 
   const filteredAndSortedFlights = useMemo(() => {
     let filtered = flights.filter(flight => {
+      // Validate flight has required fields
+      if (!flight.flightNumber || !flight.origin || !flight.destination || !flight.delayPrediction) {
+        console.warn('Flight missing required fields:', flight)
+        return false
+      }
+      
       // Search filter
       const matchesSearch = 
         flight.flightNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,7 +87,7 @@ export const Dashboard = () => {
         flight.destination.toLowerCase().includes(searchQuery.toLowerCase())
       
       // Risk filter
-      const delayProb = flight.delayPrediction.delay_probability
+      const delayProb = flight.delayPrediction?.delay_probability ?? 0
       const matchesRisk = 
         riskFilter === "all" ||
         (riskFilter === "high" && delayProb >= 0.6) ||
@@ -49,18 +101,20 @@ export const Dashboard = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "delay":
-          return b.delayPrediction.delay_probability - a.delayPrediction.delay_probability
+          const probA = a.delayPrediction?.delay_probability ?? 0
+          const probB = b.delayPrediction?.delay_probability ?? 0
+          return probB - probA
         case "flight":
-          return a.flightNumber.localeCompare(b.flightNumber)
+          return (a.flightNumber || '').localeCompare(b.flightNumber || '')
         case "route":
-          return a.origin.localeCompare(b.origin)
+          return (a.origin || '').localeCompare(b.origin || '')
         default:
           return 0
       }
     })
 
     return filtered
-  }, [searchQuery, riskFilter, sortBy])
+  }, [flights, searchQuery, riskFilter, sortBy])
 
   // Group flights by risk status
   const groupedFlights = useMemo(() => {
@@ -75,7 +129,7 @@ export const Dashboard = () => {
     }
 
     filteredAndSortedFlights.forEach(flight => {
-      const delayProb = flight.delayPrediction.delay_probability
+      const delayProb = flight.delayPrediction?.delay_probability ?? 0
       if (delayProb >= 0.6) {
         groups["HIGH RISK"].push(flight)
       } else if (delayProb >= 0.3) {
@@ -102,9 +156,31 @@ export const Dashboard = () => {
     return "gray"
   }
 
+  if (loading) {
+    return (
+      <Layout searchQuery={searchQuery} onSearchChange={setSearchQuery}>
+        <main className="dashboard-container" role="main">
+          <div className="dashboard-empty-state" role="status" aria-live="polite">
+            <div className="dashboard-empty-icon" aria-hidden="true">
+              <svg className="w-8 h-8 animate-spin" style={{ color: 'var(--color-text-tertiary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 className="dashboard-empty-title">Loading flights...</h3>
+          </div>
+        </main>
+      </Layout>
+    )
+  }
+
   return (
     <Layout searchQuery={searchQuery} onSearchChange={setSearchQuery}>
       <main className="dashboard-container" role="main">
+        {error && (
+          <div className="mb-4 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm">
+            {error}
+          </div>
+        )}
         {/* Breadcrumbs */}
         <header className="dashboard-header">
           <nav className="dashboard-breadcrumb" aria-label="Breadcrumb navigation">
@@ -183,7 +259,7 @@ export const Dashboard = () => {
         </section>
 
         {/* Empty State */}
-        {filteredAndSortedFlights.length === 0 && (
+        {Object.keys(groupedFlights).length === 0 && filteredAndSortedFlights.length === 0 && (
           <div className="dashboard-empty-state" role="status" aria-live="polite">
             <div className="dashboard-empty-icon" aria-hidden="true">
               <svg className="w-8 h-8" style={{ color: 'var(--color-text-tertiary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +268,9 @@ export const Dashboard = () => {
             </div>
             <h3 className="dashboard-empty-title">No flights found</h3>
             <p className="dashboard-empty-text">
-              Try adjusting your search or filter criteria
+              {flights.length === 0 
+                ? "No flights available. Make sure the database is loaded with flight data."
+                : "Try adjusting your search or filter criteria"}
             </p>
           </div>
         )}
