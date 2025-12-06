@@ -5,6 +5,7 @@ Predicts available cargo capacity (weight and volume) for flights
 from datetime import datetime
 from typing import Dict, Any, Optional
 from app.services.baggage_predictor import BaggagePredictor
+from app.infrastructure.external.adsbdb_client import ADSBDBClient
 
 
 class CargoCapacityPredictor:
@@ -12,6 +13,7 @@ class CargoCapacityPredictor:
     
     # Aircraft capacity lookup (in kg and m³)
     # These are approximate - should be loaded from database or config
+    # Can be enriched with ADSBDB data
     AIRCRAFT_CAPACITIES = {
         'Boeing 737-800': {
             'cargo_weight_kg': 20500,
@@ -35,11 +37,42 @@ class CargoCapacityPredictor:
         }
     }
     
-    def __init__(self, baggage_predictor: Optional[BaggagePredictor] = None):
+    def __init__(
+        self,
+        baggage_predictor: Optional[BaggagePredictor] = None,
+        adsbdb_client: Optional[ADSBDBClient] = None
+    ):
         self.baggage_predictor = baggage_predictor or BaggagePredictor()
+        self.adsbdb_client = adsbdb_client or ADSBDBClient()
         
-    def _get_aircraft_capacity(self, aircraft_type: str) -> Dict[str, float]:
-        """Get aircraft cargo capacity specifications"""
+    async def _get_aircraft_capacity(
+        self,
+        aircraft_type: str,
+        registration: Optional[str] = None
+    ) -> Dict[str, float]:
+        """
+        Get aircraft cargo capacity specifications
+        
+        Tries to enrich with ADSBDB data if registration is provided
+        
+        Args:
+            aircraft_type: Aircraft type string
+            registration: Optional aircraft registration for ADSBDB lookup
+        
+        Returns:
+            Dictionary with capacity specifications
+        """
+        # Try to get accurate aircraft type from ADSBDB if registration provided
+        if registration:
+            try:
+                aircraft_info = await self.adsbdb_client.get_aircraft_for_capacity_calculation(registration)
+                if aircraft_info and aircraft_info.get("aircraft_type"):
+                    # Use the more accurate type from ADSBDB
+                    aircraft_type = aircraft_info["aircraft_type"]
+            except Exception:
+                # Fallback to provided type if ADSBDB fails
+                pass
+        
         # Try exact match
         if aircraft_type in self.AIRCRAFT_CAPACITIES:
             return self.AIRCRAFT_CAPACITIES[aircraft_type]
@@ -56,7 +89,7 @@ class CargoCapacityPredictor:
             'max_takeoff_weight_kg': 80000
         }
     
-    def predict_available_capacity(
+    async def predict_available_capacity(
         self,
         aircraft_type: str,
         passenger_count: int,
@@ -65,7 +98,8 @@ class CargoCapacityPredictor:
         flight_date: datetime,
         fuel_weight_kg: Optional[float] = None,
         days_before_flight: int = 0,
-        safety_margin_pct: float = 0.05  # 5% safety margin
+        safety_margin_pct: float = 0.05,  # 5% safety margin
+        aircraft_registration: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Predict available cargo capacity
@@ -83,8 +117,8 @@ class CargoCapacityPredictor:
         Returns:
             Dictionary with available capacity predictions
         """
-        # Get aircraft capacity
-        aircraft_cap = self._get_aircraft_capacity(aircraft_type)
+        # Get aircraft capacity (with ADSBDB enrichment if registration provided)
+        aircraft_cap = await self._get_aircraft_capacity(aircraft_type, aircraft_registration)
         max_cargo_weight_kg = aircraft_cap['cargo_weight_kg']
         max_cargo_volume_m3 = aircraft_cap['cargo_volume_m3']
         
@@ -172,7 +206,7 @@ class CargoCapacityPredictor:
             'days_before_flight': days_before_flight
         }
     
-    def get_capacity_summary(
+    async def get_capacity_summary(
         self,
         aircraft_type: str,
         passenger_count: int,
@@ -180,21 +214,23 @@ class CargoCapacityPredictor:
         destination: str,
         flight_date: datetime,
         fuel_weight_kg: Optional[float] = None,
-        days_before_flight: int = 0
+        days_before_flight: int = 0,
+        aircraft_registration: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Get simplified capacity summary for API responses
         
         Returns a simplified version suitable for API responses
         """
-        prediction = self.predict_available_capacity(
+        prediction = await self.predict_available_capacity(
             aircraft_type=aircraft_type,
             passenger_count=passenger_count,
             origin=origin,
             destination=destination,
             flight_date=flight_date,
             fuel_weight_kg=fuel_weight_kg,
-            days_before_flight=days_before_flight
+            days_before_flight=days_before_flight,
+            aircraft_registration=aircraft_registration
         )
         
         return {

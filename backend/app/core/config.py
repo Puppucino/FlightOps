@@ -20,9 +20,13 @@ class Settings(BaseSettings):
     # CORS - accepts comma-separated string or list
     CORS_ORIGINS: Union[str, List[str]] = "http://localhost:3000,http://localhost:5173"
     
-    # External API Keys
-    WEATHER_API_KEY: str = ""
-    AVIATION_API_KEY: str = ""
+    # External API Keys (loaded from .env file)
+    # Note: AviationWeather.gov API does NOT require an API key
+    WEATHER_API_KEY: str = ""  # Not currently used - AviationWeather API is public
+    AVIATION_API_KEY: str = ""  # For adsbdb.com or other aviation APIs (if needed)
+    DEEPSEEK_API_KEY: str = ""  # Required for AI agent features
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    DEEPSEEK_MODEL: str = "deepseek-chat"  # Using deepseek-chat for best balance
     
     # Environment
     ENVIRONMENT: str = "development"

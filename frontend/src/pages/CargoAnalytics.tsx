@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Card } from '../components/Card'
 import { ProgressBar } from '../components/ProgressBar'
 import { StatCard } from '../components/StatCard'
+import AIChat from '../components/AIChat'
 import { getCargoAnalytics, getCargoAnalyticsByFlightNumber, getCargoFlights, getCargoAnalyticsWithPrediction } from '../api/cargoService'
 import { CargoAnalyticsData, FlightDetails } from '../types'
 import { format, parseISO } from 'date-fns'
@@ -18,6 +19,8 @@ const CargoAnalytics: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [daysBeforeFlight, setDaysBeforeFlight] = useState<number>(0)
   const [predictionData, setPredictionData] = useState<any>(null)
+  const [showChat, setShowChat] = useState(false)
+  const [chatMinimized, setChatMinimized] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -545,6 +548,30 @@ const CargoAnalytics: React.FC = () => {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* AI Chat Component */}
+      {showChat ? (
+        <div className="ai-chat-wrapper">
+          <AIChat
+            flightId={flightId || flightNumber}
+            flightData={analyticsData?.flight}
+            minimized={chatMinimized}
+            onMinimize={() => setChatMinimized(!chatMinimized)}
+            onClose={() => setShowChat(false)}
+          />
+        </div>
+      ) : (
+        <button
+          className="ai-chat-toggle-btn"
+          onClick={() => {
+            setShowChat(true)
+            setChatMinimized(false)
+          }}
+          title="Open AI Assistant"
+        >
+          🤖 AI Assistant
+        </button>
       )}
     </main>
   )

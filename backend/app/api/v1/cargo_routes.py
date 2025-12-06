@@ -81,14 +81,15 @@ async def predict_cargo_capacity(
     - Uncertainty based on days before flight
     """
     try:
-        prediction = ml_service.predict_available_cargo_capacity(
+        prediction = await ml_service.predict_available_cargo_capacity(
             aircraft_type=request.aircraft_type,
             passenger_count=request.passenger_count,
             origin=request.origin.upper(),
             destination=request.destination.upper(),
             flight_date=request.flight_date,
             fuel_weight_kg=request.fuel_weight_kg,
-            days_before_flight=request.days_before_flight
+            days_before_flight=request.days_before_flight,
+            aircraft_registration=None  # Can be added to request model if needed
         )
         
         return CargoCapacityPredictionResponse(**prediction)
@@ -145,15 +146,17 @@ async def predict_cargo_capacity_by_flight(
                 detail="passenger_count is required (not provided and not in flight record)"
             )
         
-        # Predict
-        prediction = ml_service.predict_available_cargo_capacity(
+        # Predict (with aircraft registration for ADSBDB enrichment)
+        aircraft_registration = aircraft.registration if aircraft else None
+        prediction = await ml_service.predict_available_cargo_capacity(
             aircraft_type=aircraft_type_str,
             passenger_count=pax_count,
             origin=origin_airport.iata_code,
             destination=dest_airport.iata_code,
             flight_date=flight.scheduled_departure,
             fuel_weight_kg=float(flight.fuel_weight_kg) if flight.fuel_weight_kg else None,
-            days_before_flight=days_before_flight
+            days_before_flight=days_before_flight,
+            aircraft_registration=aircraft_registration
         )
         
         return CargoCapacityPredictionResponse(**prediction)
@@ -231,14 +234,16 @@ async def get_cargo_analytics(
         # Get predictions
         pax_count = flight.passenger_count or 0
         if pax_count > 0:
-            prediction = ml_service.predict_available_cargo_capacity(
+            aircraft_registration = aircraft.registration if aircraft else None
+            prediction = await ml_service.predict_available_cargo_capacity(
                 aircraft_type=aircraft_type_str,
                 passenger_count=pax_count,
                 origin=origin_airport.iata_code,
                 destination=dest_airport.iata_code,
                 flight_date=flight.scheduled_departure,
                 fuel_weight_kg=float(flight.fuel_weight_kg) if flight.fuel_weight_kg else None,
-                days_before_flight=days_before_flight
+                days_before_flight=days_before_flight,
+                aircraft_registration=aircraft_registration
             )
         else:
             # Return default/empty prediction if no passenger data
@@ -466,14 +471,16 @@ async def get_cargo_calendar(
                     days_before = (flight_date - today).days
                     days_before = max(0, days_before)  # Don't use negative days
                     
-                    cargo_prediction = ml_service.predict_available_cargo_capacity(
+                    aircraft_registration = aircraft.registration if aircraft else None
+                    cargo_prediction = await ml_service.predict_available_cargo_capacity(
                         aircraft_type=aircraft_type_str,
                         passenger_count=traffic_est["estimated_passenger_count"],
                         origin=origin.iata_code,
                         destination=dest.iata_code,
                         flight_date=flight.scheduled_departure,
                         fuel_weight_kg=float(flight.fuel_weight_kg) if flight.fuel_weight_kg else None,
-                        days_before_flight=days_before
+                        days_before_flight=days_before,
+                        aircraft_registration=aircraft_registration
                     )
                 except Exception as e:
                     # If prediction fails, continue without it
