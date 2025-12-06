@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Card } from '../components/Card'
 import { ProgressBar } from '../components/ProgressBar'
 import { StatCard } from '../components/StatCard'
-import { getCargoAnalytics, getCargoAnalyticsByFlightNumber, getCargoFlights } from '../api/cargoService'
+import { getCargoAnalytics, getCargoAnalyticsByFlightNumber, getCargoFlights, getCargoAnalyticsWithPrediction } from '../api/cargoService'
 import { CargoAnalyticsData, FlightDetails } from '../types'
 import { format, parseISO } from 'date-fns'
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
@@ -16,6 +16,8 @@ const CargoAnalytics: React.FC = () => {
   const [availableFlights, setAvailableFlights] = useState<FlightDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [daysBeforeFlight, setDaysBeforeFlight] = useState<number>(0)
+  const [predictionData, setPredictionData] = useState<any>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,20 +29,33 @@ const CargoAnalytics: React.FC = () => {
         const flights = await getCargoFlights()
         setAvailableFlights(flights)
 
-        // Fetch analytics data
+        // Fetch analytics data with prediction support
         let data: CargoAnalyticsData
         if (flightId) {
-          data = await getCargoAnalytics(flightId)
+          data = await getCargoAnalyticsWithPrediction(flightId, daysBeforeFlight)
         } else if (flightNumber) {
           data = await getCargoAnalyticsByFlightNumber(flightNumber)
         } else if (flights.length > 0) {
           // Default to first flight if no ID provided
-          data = await getCargoAnalytics(flights[0].id)
+          data = await getCargoAnalyticsWithPrediction(flights[0].id, daysBeforeFlight)
         } else {
           throw new Error('No flights available')
         }
 
         setAnalyticsData(data)
+        
+        // Extract prediction data if available - always set it if prediction exists
+        if (data.prediction && typeof data.prediction === 'object') {
+          setPredictionData(data.prediction)
+        } else if (data.storage_availability) {
+          // If no prediction object but we have storage_availability, create a minimal predictionData
+          setPredictionData({
+            available_weight_kg: (data.storage_availability.available_capacity_tonnes || 0) * 1000,
+            available_volume_m3: 0,
+            constraining_factor: 'weight',
+            overbooking_risk: 'low'
+          })
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load cargo analytics')
         console.error('Error fetching cargo analytics:', err)
@@ -50,7 +65,7 @@ const CargoAnalytics: React.FC = () => {
     }
 
     fetchData()
-  }, [flightId, flightNumber])
+  }, [flightId, flightNumber, daysBeforeFlight])
 
 
   if (loading) {
@@ -77,6 +92,22 @@ const CargoAnalytics: React.FC = () => {
   }
 
   const { flight, storage_availability, loading_progress, prediction } = analyticsData
+  
+  // Safe fallback for loading_progress if missing
+  const safeLoadingProgress = loading_progress || {
+    flight_id: flight?.id || '',
+    flight_number: flight?.flight_number || '',
+    total_cargo_tonnes: storage_availability?.total_capacity_tonnes || 0,
+    loaded_cargo_tonnes: storage_availability?.current_cargo_tonnes || 0,
+    loading_percentage: storage_availability?.utilization_percentage || 0,
+    status: 'not_started' as const
+  }
+  
+  // Safe fallback for prediction if missing
+  const safePrediction = prediction || {
+    predicted_cargo_volume: 0,
+    confidence: 0
+  }
 
   // Prepare chart data
   const storageData = [
@@ -137,6 +168,24 @@ const CargoAnalytics: React.FC = () => {
             ))}
           </select>
         )}
+        <div className="prediction-controls">
+          <label htmlFor="days-before-flight" className="days-label">
+            Predict Capacity:
+          </label>
+          <select
+            id="days-before-flight"
+            className="days-selector"
+            value={daysBeforeFlight}
+            onChange={(e) => setDaysBeforeFlight(Number(e.target.value))}
+          >
+            <option value={0}>Day of Flight</option>
+            <option value={1}>1 Day Before</option>
+            <option value={3}>3 Days Before</option>
+            <option value={7}>7 Days Before</option>
+            <option value={14}>14 Days Before</option>
+            <option value={30}>30 Days Before</option>
+          </select>
+        </div>
       </div>
 
       {/* Flight Details Section */}
@@ -187,33 +236,33 @@ const CargoAnalytics: React.FC = () => {
       <div className="stats-grid">
         <StatCard
           label="Storage Utilization"
-          value={storage_availability.utilization_percentage}
-          unit="%"
+          value={`${storage_availability.utilization_percentage.toFixed(2)}%`}
           icon="📦"
-          color="blue"
+          color="text-blue-600 dark:text-blue-400"
+          gradient="from-blue-500 to-blue-600"
         />
         <StatCard
           label="Available Capacity"
-          value={storage_availability.available_capacity_tonnes}
-          unit="tonnes"
+          value={`${storage_availability.available_capacity_tonnes.toFixed(2)} tonnes`}
           icon="📊"
-          color="green"
+          color="text-green-600 dark:text-green-400"
+          gradient="from-green-500 to-green-600"
         />
         <StatCard
           label="Loading Progress"
-          value={loading_progress.loading_percentage}
-          unit="%"
+          value={`${safeLoadingProgress.loading_percentage.toFixed(2)}%`}
           icon="⚡"
-          color="yellow"
+          color="text-yellow-600 dark:text-yellow-400"
+          gradient="from-yellow-500 to-yellow-600"
         />
         <StatCard
           label="Predicted Demand"
-          value={prediction.predicted_cargo_volume}
-          unit="tonnes"
+          value={`${safePrediction.predicted_cargo_volume.toFixed(2)} tonnes`}
           icon="🔮"
-          color="purple"
+          color="text-purple-600 dark:text-purple-400"
+          gradient="from-purple-500 to-purple-600"
           trend="up"
-          trendValue={`${(prediction.confidence * 100).toFixed(0)}% confidence`}
+          trendValue={`${(safePrediction.confidence * 100).toFixed(0)}% confidence`}
         />
       </div>
 
@@ -282,33 +331,33 @@ const CargoAnalytics: React.FC = () => {
         <Card title="Cargo Loading Progress" icon="⚡" className="loading-card">
           <div className="loading-info">
             <div className="loading-status">
-              <span className={`status-badge status-${getStatusColor(loading_progress.status)}`}>
-                {loading_progress.status.replace('_', ' ').toUpperCase()}
+              <span className={`status-badge status-${getStatusColor(safeLoadingProgress.status)}`}>
+                {safeLoadingProgress.status.replace('_', ' ').toUpperCase()}
               </span>
             </div>
             <ProgressBar
-              value={loading_progress.loading_percentage}
+              value={safeLoadingProgress.loading_percentage}
               label="Loading Progress"
-              color={getStatusColor(loading_progress.status) as any}
+              color={getStatusColor(safeLoadingProgress.status) as any}
               size="large"
             />
             <div className="loading-details">
               <div className="detail-row">
                 <span>Loaded:</span>
                 <span className="value">
-                  {loading_progress.loaded_cargo_tonnes.toFixed(2)} / {loading_progress.total_cargo_tonnes.toFixed(2)} tonnes
+                  {safeLoadingProgress.loaded_cargo_tonnes.toFixed(2)} / {safeLoadingProgress.total_cargo_tonnes.toFixed(2)} tonnes
                 </span>
               </div>
               <div className="detail-row">
                 <span>Remaining:</span>
                 <span className="value">
-                  {(loading_progress.total_cargo_tonnes - loading_progress.loaded_cargo_tonnes).toFixed(2)} tonnes
+                  {(safeLoadingProgress.total_cargo_tonnes - safeLoadingProgress.loaded_cargo_tonnes).toFixed(2)} tonnes
                 </span>
               </div>
               {loading_progress.estimated_completion_time && (
                 <div className="detail-row">
                   <span>Est. Completion:</span>
-                  <span className="value">{formatDate(loading_progress.estimated_completion_time)}</span>
+                  <span className="value">{formatDate(safeLoadingProgress.estimated_completion_time)}</span>
                 </div>
               )}
             </div>
@@ -349,26 +398,127 @@ const CargoAnalytics: React.FC = () => {
         </ResponsiveContainer>
       </Card>
 
-      {/* Prediction Section */}
-      <Card title="Cargo Demand Prediction" icon="🔮" className="prediction-card">
-        <div className="prediction-info">
-          <div className="prediction-value">
-            <span className="prediction-label">Predicted Cargo Volume</span>
-            <span className="prediction-number">
-              {prediction.predicted_cargo_volume.toFixed(2)} tonnes
-            </span>
-          </div>
-          <div className="confidence-indicator">
-            <span className="confidence-label">Confidence Score</span>
-            <ProgressBar
-              value={prediction.confidence * 100}
-              color="purple"
-              size="medium"
-            />
-            <span className="confidence-value">{(prediction.confidence * 100).toFixed(1)}%</span>
-          </div>
+      {/* ML Prediction Section */}
+      {predictionData && (
+        <div className="analytics-grid">
+          <Card title={`Capacity Prediction (${daysBeforeFlight} Days Before Flight)`} icon="🤖" className="prediction-card">
+            <div className="prediction-info">
+              <div className="prediction-grid">
+                <div className="prediction-metric">
+                  <span className="metric-label">Available Weight</span>
+                  <span className="metric-value-large">
+                    {predictionData.available_weight_kg ? (predictionData.available_weight_kg / 1000).toFixed(2) : 'N/A'} tonnes
+                  </span>
+                  {predictionData.confidence_interval_95_lower_weight && (
+                    <span className="confidence-range">
+                      {((predictionData.confidence_interval_95_lower_weight) / 1000).toFixed(2)} - {((predictionData.confidence_interval_95_upper_weight) / 1000).toFixed(2)} tonnes
+                    </span>
+                  )}
+                </div>
+                <div className="prediction-metric">
+                  <span className="metric-label">Available Volume</span>
+                  <span className="metric-value-large">
+                    {predictionData.available_volume_m3 ? predictionData.available_volume_m3.toFixed(2) : 'N/A'} m³
+                  </span>
+                  {predictionData.confidence_interval_95_lower_volume && (
+                    <span className="confidence-range">
+                      {predictionData.confidence_interval_95_lower_volume.toFixed(2)} - {predictionData.confidence_interval_95_upper_volume.toFixed(2)} m³
+                    </span>
+                  )}
+                </div>
+                <div className="prediction-metric">
+                  <span className="metric-label">Constraining Factor</span>
+                  <span className={`metric-value status status-${predictionData.constraining_factor === 'weight' ? 'warning' : 'primary'}`}>
+                    {predictionData.constraining_factor?.toUpperCase() || 'N/A'}
+                  </span>
+                </div>
+                <div className="prediction-metric">
+                  <span className="metric-label">Overbooking Risk</span>
+                  <span className={`metric-value status status-${
+                    predictionData.overbooking_risk === 'high' ? 'danger' :
+                    predictionData.overbooking_risk === 'medium' ? 'warning' : 'success'
+                  }`}>
+                    {predictionData.overbooking_risk?.toUpperCase() || 'LOW'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Baggage Prediction" icon="🧳" className="baggage-card">
+            <div className="baggage-info">
+              {/* Show baggage prediction if available, otherwise use direct fields */}
+              {(predictionData.baggage_prediction || predictionData.predicted_baggage_weight_kg) ? (
+                <>
+                  <div className="baggage-metrics">
+                    <div className="metric">
+                      <span className="metric-label">Predicted Baggage Weight</span>
+                      <span className="metric-value">
+                        {predictionData.baggage_prediction?.predicted_baggage_weight_kg || predictionData.predicted_baggage_weight_kg ? 
+                          ((predictionData.baggage_prediction?.predicted_baggage_weight_kg || predictionData.predicted_baggage_weight_kg) / 1000).toFixed(2) : 'N/A'} tonnes
+                      </span>
+                    </div>
+                    <div className="metric">
+                      <span className="metric-label">Predicted Baggage Volume</span>
+                      <span className="metric-value">
+                        {predictionData.baggage_prediction?.predicted_baggage_volume_m3 || predictionData.predicted_baggage_volume_m3 ? 
+                          (predictionData.baggage_prediction?.predicted_baggage_volume_m3 || predictionData.predicted_baggage_volume_m3).toFixed(2) : 'N/A'} m³
+                      </span>
+                    </div>
+                    {(predictionData.baggage_prediction?.confidence_interval_95_lower_weight || predictionData.confidence_interval_95_lower_weight) && (
+                      <div className="metric">
+                        <span className="metric-label">Confidence Interval (95%)</span>
+                        <span className="metric-value-small">
+                          Weight: {((predictionData.baggage_prediction?.confidence_interval_95_lower_weight || predictionData.confidence_interval_95_lower_weight) / 1000).toFixed(2)} - 
+                          {((predictionData.baggage_prediction?.confidence_interval_95_upper_weight || predictionData.confidence_interval_95_upper_weight) / 1000).toFixed(2)} tonnes
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="baggage-metrics">
+                  <div className="metric">
+                    <span className="metric-label">No Baggage Prediction Available</span>
+                    <span className="metric-value">N/A</span>
+                  </div>
+                </div>
+              )}
+              {predictionData.aircraft_max_cargo_weight_kg && (
+                <div className="aircraft-capacity">
+                  <span className="capacity-label">Aircraft Max Capacity:</span>
+                  <span className="capacity-value">
+                    {(predictionData.aircraft_max_cargo_weight_kg / 1000).toFixed(2)} tonnes / {predictionData.aircraft_max_cargo_volume_m3?.toFixed(2) || 'N/A'} m³
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
+
+      {/* Legacy Prediction Section (if no ML prediction) */}
+      {!predictionData && (
+        <Card title="Cargo Demand Prediction" icon="🔮" className="prediction-card">
+          <div className="prediction-info">
+            <div className="prediction-value">
+              <span className="prediction-label">Predicted Cargo Volume</span>
+              <span className="prediction-number">
+                {prediction.predicted_cargo_volume.toFixed(2)} tonnes
+              </span>
+            </div>
+            <div className="confidence-indicator">
+              <span className="confidence-label">Confidence Score</span>
+              <ProgressBar
+                value={prediction.confidence * 100}
+                color="purple"
+                size="medium"
+              />
+              <span className="confidence-value">{(prediction.confidence * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

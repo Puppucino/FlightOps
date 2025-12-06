@@ -8,6 +8,6 @@ export default {
     extend: {},
   },
   plugins: [],
-  darkMode: 'class',
+  darkMode: 'media', // Uses prefers-color-scheme media query for system dark mode detection
 }
 
