@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AlertCircle, Cloud, Users, Package, Plane, TrendingUp, Clock, Radio, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Layout } from '../components/Layout';
+import './FlightOpsDashboard.css';
 
 interface Alert {
   id: number;
@@ -341,14 +343,15 @@ const FlightOpsDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
-      
-      <div className="max-w-7xl mx-auto relative z-10">
+    <Layout>
+      <div className="flight-ops-container">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent 
                          hover:from-blue-300 hover:via-purple-300 hover:to-pink-300 transition-all duration-300">
@@ -458,7 +461,8 @@ const FlightOpsDashboard = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 };
 

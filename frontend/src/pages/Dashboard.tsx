@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react"
 import { FlightCard } from "../components/FlightCard"
 import { StatCard } from "../components/StatCard"
-import { Sidebar } from "../components/Sidebar"
-import { Header } from "../components/Header"
+import { Layout } from "../components/Layout"
 import { mockFlights } from "../data/mockFlights"
 import { Flight } from "../types"
+import './Dashboard.css'
 
 type RiskFilter = "all" | "high" | "medium" | "low"
 type SortOption = "delay" | "flight" | "route"
@@ -97,72 +97,54 @@ export const Dashboard = () => {
   }, [filteredAndSortedFlights, groupBy])
 
   const getGroupColor = (groupName: string) => {
-    if (groupName === "HIGH RISK") return "bg-red-500"
-    if (groupName === "MEDIUM RISK") return "bg-orange-500"
-    if (groupName === "LOW RISK") return "bg-green-500"
-    return "bg-gray-500"
+    if (groupName === "HIGH RISK") return "red"
+    if (groupName === "MEDIUM RISK") return "orange"
+    if (groupName === "LOW RISK") return "green"
+    return "gray"
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar />
+    <Layout searchQuery={searchQuery} onSearchChange={setSearchQuery}>
+      <div className="dashboard-container">
+        {/* Breadcrumbs and View Tabs */}
+        <div className="dashboard-header">
+          <div className="dashboard-breadcrumb">
+            <span>Dashboard</span>
+            <span className="dashboard-breadcrumb-separator">/</span>
+            <span className="dashboard-breadcrumb-item">Flight Monitoring</span>
+          </div>
+          
+          {/* View Tabs */}
+          <div className="dashboard-view-tabs">
+            <button className="dashboard-view-tab active">List</button>
+            <button className="dashboard-view-tab">Board</button>
+            <button className="dashboard-view-tab">Timeline</button>
+            <button className="dashboard-view-tab">Analytics</button>
+          </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col ml-64">
-        {/* Header */}
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+          {/* Action Bar */}
+          <div className="dashboard-action-bar">
+            <button className="dashboard-action-btn">
+              <span>Group: Status</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button className="dashboard-action-btn">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span>Filter</span>
+            </button>
+            <button className="dashboard-action-btn primary">
+              <span>+</span>
+              <span>Add Flight</span>
+            </button>
+          </div>
+        </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto mt-16">
-          <div className="p-6">
-            {/* Breadcrumbs and View Tabs */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
-                <span>Dashboard</span>
-                <span>/</span>
-                <span className="text-gray-700 dark:text-gray-300 font-medium">Flight Monitoring</span>
-              </div>
-              
-              {/* View Tabs */}
-              <div className="flex items-center gap-2 mb-4">
-                <button className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  List
-                </button>
-                <button className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Board
-                </button>
-                <button className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Timeline
-                </button>
-                <button className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Analytics
-                </button>
-              </div>
-
-              {/* Action Bar */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <button className="px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
-                  <span>Group: Status</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <button className="px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  <span>Filter</span>
-                </button>
-                <button className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                  <span>+</span>
-                  <span>Add Flight</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+        {/* Stats Cards */}
+        <div className="dashboard-stats-grid">
               <StatCard 
                 label="Total Flights" 
                 value={stats.total}
@@ -198,68 +180,62 @@ export const Dashboard = () => {
               />
             </div>
 
-            {/* Grouped Flight Lists */}
-            <div className="space-y-6">
-              {Object.entries(groupedFlights).map(([groupName, groupFlights]) => (
-                <div key={groupName} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
-                  {/* Group Header */}
-                  <div className={`${getGroupColor(groupName)} px-4 py-3 flex items-center justify-between`}>
-                    <div className="flex items-center gap-3">
-                      <button className="text-white hover:bg-white/20 rounded p-1 transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      <h3 className="text-white font-bold text-sm uppercase tracking-wide">
-                        {groupName}
-                      </h3>
-                      <span className="text-white/80 text-xs font-medium bg-white/20 px-2 py-0.5 rounded">
-                        {groupFlights.length}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Flight Cards Grid */}
-                  <div className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupFlights.map((flight, index) => (
-                        <div
-                          key={flight.id}
-                          className="animate-in fade-in slide-in-from-bottom-4"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <FlightCard flight={flight} />
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Add Flight Button */}
-                    <button className="mt-4 w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-colors flex items-center justify-center gap-2">
-                      <span>+</span>
-                      <span>Add Flight</span>
-                    </button>
-                  </div>
+        {/* Grouped Flight Lists */}
+        <div className="dashboard-groups">
+          {Object.entries(groupedFlights).map(([groupName, groupFlights]) => (
+            <div key={groupName} className="dashboard-group">
+              {/* Group Header */}
+              <div className={`dashboard-group-header ${getGroupColor(groupName).replace('bg-', '').replace('-500', '').toLowerCase()}-risk`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '4px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, textTransform: 'uppercase' }}>
+                    {groupName}
+                  </h3>
+                  <span style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 500 }}>
+                    {groupFlights.length}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {/* Empty State */}
-            {filteredAndSortedFlights.length === 0 && (
-              <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No flights found</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Try adjusting your search or filter criteria
-                </p>
               </div>
-            )}
-          </div>
+
+              {/* Flight Cards Grid */}
+              <div className="dashboard-group-content">
+                <div className="dashboard-flights-grid">
+                  {groupFlights.map((flight, index) => (
+                    <div key={flight.id}>
+                      <FlightCard flight={flight} />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Add Flight Button */}
+                <button className="dashboard-add-flight-btn">
+                  <span>+</span>
+                  <span>Add Flight</span>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {/* Empty State */}
+        {filteredAndSortedFlights.length === 0 && (
+          <div className="dashboard-empty-state">
+            <div className="dashboard-empty-icon">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="dashboard-empty-title">No flights found</h3>
+            <p className="dashboard-empty-text">
+              Try adjusting your search or filter criteria
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+    </Layout>
   )
 }
