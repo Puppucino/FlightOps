@@ -3,25 +3,48 @@ import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import CargoAnalytics from './pages/CargoAnalytics'
 import CargoAnalyticsDashboard from './pages/CargoAnalyticsDashboard'
+import { Dashboard } from './pages/Dashboard'
 import './App.css'
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Sidebar />
-        <div className="main-content">
-          <Header />
-          <main className="main-body">
-            <Routes>
-              <Route path="/" element={<CargoAnalyticsDashboard />} />
-              <Route path="/cargo-analytics" element={<CargoAnalyticsDashboard />} />
-              <Route path="/cargo-analytics/:flightId" element={<CargoAnalytics />} />
-              <Route path="/cargo-analytics/flight/:flightNumber" element={<CargoAnalytics />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/cargo-analytics" element={
+          <div className="App">
+            <Sidebar />
+            <div className="main-content">
+              <Header />
+              <main className="main-body">
+                <CargoAnalyticsDashboard />
+              </main>
+            </div>
+          </div>
+        } />
+        <Route path="/cargo-analytics/:flightId" element={
+          <div className="App">
+            <Sidebar />
+            <div className="main-content">
+              <Header />
+              <main className="main-body">
+                <CargoAnalytics />
+              </main>
+            </div>
+          </div>
+        } />
+        <Route path="/cargo-analytics/flight/:flightNumber" element={
+          <div className="App">
+            <Sidebar />
+            <div className="main-content">
+              <Header />
+              <main className="main-body">
+                <CargoAnalytics />
+              </main>
+            </div>
+          </div>
+        } />
+      </Routes>
     </Router>
   )
 }
