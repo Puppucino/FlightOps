@@ -1,14 +1,19 @@
 .App {
-  text-align: center;
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
 }
 
-.App-header {
-  background-color: #282c34;
-  padding: 20px;
-  color: white;
+.main-content {
+  flex: 1;
+  margin-left: 240px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-main {
-  padding: 20px;
+.main-body {
+  flex: 1;
+  overflow-y: auto;
 }
 
