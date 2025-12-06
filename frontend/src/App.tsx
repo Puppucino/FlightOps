@@ -4,6 +4,7 @@ import { Header } from './components/Header'
 import CargoAnalytics from './pages/CargoAnalytics'
 import CargoAnalyticsDashboard from './pages/CargoAnalyticsDashboard'
 import { Dashboard } from './pages/Dashboard'
+import FlightOpsDashboard from './pages/FlightOpsDashboard'
 import './App.css'
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/flight-ops" element={<FlightOpsDashboard />} />
         <Route path="/cargo-analytics" element={
           <div className="App">
             <Sidebar />
@@ -50,4 +52,3 @@ function App() {
 }
 
 export default App
-
