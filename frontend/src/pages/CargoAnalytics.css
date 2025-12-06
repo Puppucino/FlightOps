@@ -1,0 +1,344 @@
+.cargo-analytics-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.cargo-analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.back-to-list-btn {
+  padding: 10px 20px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-to-list-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.flight-selector {
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 300px;
+}
+
+.flight-selector:hover {
+  border-color: #9ca3af;
+}
+
+.flight-selector:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  text-align: center;
+  padding: 48px;
+  color: #374151;
+}
+
+.error-message h2 {
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.error-message button {
+  margin-top: 24px;
+  padding: 12px 24px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.error-message button:hover {
+  background: #2563eb;
+}
+
+/* Flight Details */
+.flight-details-card {
+  margin-bottom: 24px;
+}
+
+.flight-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.flight-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 16px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.detail-value.route {
+  color: #60a5fa;
+  font-size: 18px;
+}
+
+.detail-value.status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status-primary {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.status-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.status-danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+/* Statistics Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* Analytics Grid */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Storage Card */
+.storage-info {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.storage-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.metric-value.available {
+  color: #10b981;
+}
+
+.pie-chart-container {
+  margin-top: 16px;
+}
+
+/* Loading Card */
+.loading-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading-status {
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loading-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.detail-row span:first-child {
+  color: #6b7280;
+}
+
+.detail-row .value {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Trend Card */
+.trend-card {
+  margin-bottom: 24px;
+}
+
+/* Prediction Card */
+.prediction-info {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.prediction-value {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #f3e8ff, #faf5ff);
+  border-radius: 12px;
+  border: 1px solid #e9d5ff;
+}
+
+.prediction-label {
+  display: block;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prediction-number {
+  display: block;
+  font-size: 36px;
+  font-weight: 700;
+  color: #8b5cf6;
+}
+
+.confidence-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confidence-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.confidence-value {
+  text-align: right;
+  font-size: 14px;
+  color: #8b5cf6;
+  font-weight: 600;
+}

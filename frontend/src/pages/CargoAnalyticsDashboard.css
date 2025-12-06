@@ -1,0 +1,38 @@
+.cargo-dashboard {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+}
+
+.dashboard-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.view-tab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.view-tab:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.view-tab.active {
+  background: #eff6ff;
+  color: #3b82f6;
+  font-weight: 600;
+}

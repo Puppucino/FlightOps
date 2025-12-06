@@ -7,7 +7,11 @@ An intelligent dashboard system for analyzing and predicting flight delays using
 - **Frontend**: React 18 + TypeScript + Vite
 - **Backend**: FastAPI (Python)
 - **Machine Learning**: scikit-learn, pandas, numpy
-- **Database**: SQLAlchemy (SQLite by default, easily configurable)
+- **Database**: 
+  - **ORM**: SQLAlchemy 2.0
+  - **Development**: SQLite (default)
+  - **Production Recommended**: PostgreSQL 14+
+  - **Migrations**: Alembic
 
 ## Project Structure
 
@@ -168,14 +172,45 @@ Frontend will be available at http://localhost:3000
 ### Frontend (.env)
 - `VITE_API_BASE_URL`: Backend API URL (default: http://localhost:8000)
 
+## Database
+
+### Database Design
+The complete database schema is documented in:
+- **[DATABASE_DESIGN.md](DATABASE_DESIGN.md)** - Full schema design and table structures
+- **[DATABASE_SUMMARY.md](DATABASE_SUMMARY.md)** - Quick overview and summary
+- **[backend/DATABASE_SETUP.md](backend/DATABASE_SETUP.md)** - Setup and management guide
+
+### Quick Database Setup
+
+**Initialize database (SQLite - Development):**
+```bash
+cd backend
+python scripts/init_db.py
+```
+
+**Using migrations (recommended):**
+```bash
+cd backend
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
+```
+
+### Database Structure
+- **11 core tables** for flights, airports, weather, traffic, and predictions
+- **ML model tracking** with version management
+- **Optimized indexes** for query performance
+- **Support for both SQLite and PostgreSQL**
+
+See [DATABASE_DESIGN.md](DATABASE_DESIGN.md) for complete details.
+
 ## Next Steps
 
-1. Implement data models for flights, weather, airports
-2. Create ML models for delay prediction
-3. Build API endpoints for predictions
-4. Develop dashboard UI components
-5. Integrate real-time data sources
-6. Add data visualization components
+1. ✅ Database schema and models completed
+2. ⏳ Create ML models for delay prediction
+3. ⏳ Build API endpoints for predictions
+4. ⏳ Develop dashboard UI components
+5. ⏳ Integrate real-time data sources
+6. ⏳ Add data visualization components
 
 ## License
 

@@ -1,2 +1,5 @@
-# API v1 Routes Package
+"""API v1 routes"""
+from .routes import router
+
+__all__ = ["router"]
 

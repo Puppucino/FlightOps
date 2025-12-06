@@ -2,7 +2,8 @@
 Application Configuration Settings
 """
 from pydantic_settings import BaseSettings
-from typing import List
+from pydantic import field_validator
+from typing import List, Union
 
 
 class Settings(BaseSettings):
@@ -16,8 +17,8 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./flight_delays.db"
     
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # CORS - accepts comma-separated string or list
+    CORS_ORIGINS: Union[str, List[str]] = "http://localhost:3000,http://localhost:5173"
     
     # External API Keys
     WEATHER_API_KEY: str = ""
@@ -25,6 +26,15 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
+    
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        """Parse CORS origins from comma-separated string or list"""
+        if isinstance(v, str):
+            # Split by comma and strip whitespace
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v if isinstance(v, list) else [v]
     
     class Config:
         env_file = ".env"
