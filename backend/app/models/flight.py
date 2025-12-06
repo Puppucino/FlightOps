@@ -30,6 +30,12 @@ class Flight(Base):
     flight_type = Column(String(20), nullable=False)  # 'passenger' or 'cargo'
     passenger_count = Column(Integer)
     cargo_weight_tonnes = Column(DECIMAL(10, 2))
+    cargo_volume_m3 = Column(DECIMAL(10, 2))  # Cargo volume in cubic meters
+    baggage_weight_kg = Column(DECIMAL(10, 2))  # Passenger baggage weight in kg
+    baggage_volume_m3 = Column(DECIMAL(10, 2))  # Passenger baggage volume in cubic meters
+    fuel_weight_kg = Column(DECIMAL(10, 2))  # Fuel weight in kg
+    fuel_price_per_kg = Column(DECIMAL(10, 2))  # Fuel price per kg
+    cargo_price_per_kg = Column(DECIMAL(10, 2))  # Cargo price per kg
     flight_status = Column(String(20), index=True)  # e.g., 'scheduled', 'departed', 'arrived', 'cancelled'
     distance_km = Column(DECIMAL(10, 2))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

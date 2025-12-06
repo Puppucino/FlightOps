@@ -1,9 +1,13 @@
 """
 Machine Learning Service
-Placeholder for ML model training and prediction services
+ML model training and prediction services
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from datetime import datetime
 import pandas as pd
+
+from app.services.cargo_capacity_predictor import CargoCapacityPredictor
+from app.services.baggage_predictor import BaggagePredictor
 
 
 class MLService:
@@ -11,7 +15,11 @@ class MLService:
     
     def __init__(self):
         """Initialize ML service"""
-        # TODO: Load trained models here
+        # Initialize cargo capacity predictor
+        self.baggage_predictor = BaggagePredictor()
+        self.cargo_capacity_predictor = CargoCapacityPredictor(self.baggage_predictor)
+        
+        # Other models (to be implemented)
         self.delay_model = None
         self.cargo_model = None
         self.passenger_traffic_model = None
@@ -83,4 +91,59 @@ class MLService:
             "predicted_passengers": 0,
             "confidence": 0.0
         }
+    
+    def predict_available_cargo_capacity(
+        self,
+        aircraft_type: str,
+        passenger_count: int,
+        origin: str,
+        destination: str,
+        flight_date: datetime,
+        fuel_weight_kg: Optional[float] = None,
+        days_before_flight: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Predict available cargo capacity X days before flight
+        
+        Args:
+            aircraft_type: Aircraft type string (e.g., "Boeing 737-800")
+            passenger_count: Number of passengers (from bookings)
+            origin: Origin airport IATA code
+            destination: Destination airport IATA code
+            flight_date: Flight departure datetime
+            fuel_weight_kg: Fuel weight in kg (optional, will be estimated if not provided)
+            days_before_flight: Days before flight (0 = day of flight)
+            
+        Returns:
+            Dictionary with available capacity predictions including:
+            - available_weight_kg: Predicted available cargo weight capacity
+            - available_volume_m3: Predicted available cargo volume capacity
+            - confidence intervals for both
+            - utilization_percentage: Current utilization
+            - constraining_factor: "weight" or "volume"
+            - overbooking_risk: "low", "medium", or "high"
+        """
+        return self.cargo_capacity_predictor.predict_available_capacity(
+            aircraft_type=aircraft_type,
+            passenger_count=passenger_count,
+            origin=origin,
+            destination=destination,
+            flight_date=flight_date,
+            fuel_weight_kg=fuel_weight_kg,
+            days_before_flight=days_before_flight
+        )
+    
+    def train_baggage_model(self, flights_df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Train baggage prediction models from flight data
+        
+        Args:
+            flights_df: DataFrame with flight data including:
+                - flight_date, origin, destination, aircraft_type
+                - passenger_count, baggage_weight_kg, baggage_volume_m3
+                
+        Returns:
+            Training metrics dictionary
+        """
+        return self.baggage_predictor.train(flights_df)
 
