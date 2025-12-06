@@ -10,7 +10,7 @@ cd models/src
 python train_optimized.py
 ```
 
-This automatically:
+This automatically:-
 - Creates destination weather data
 - Trains XGBoost + LightGBM ensemble
 - Saves models to `trained_models/`
