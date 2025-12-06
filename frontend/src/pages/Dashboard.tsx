@@ -104,97 +104,69 @@ export const Dashboard = () => {
 
   return (
     <Layout searchQuery={searchQuery} onSearchChange={setSearchQuery}>
-      <div className="dashboard-container">
-        {/* Breadcrumbs and View Tabs */}
-        <div className="dashboard-header">
-          <div className="dashboard-breadcrumb">
+      <main className="dashboard-container" role="main">
+        {/* Breadcrumbs */}
+        <header className="dashboard-header">
+          <nav className="dashboard-breadcrumb" aria-label="Breadcrumb navigation">
             <span>Dashboard</span>
-            <span className="dashboard-breadcrumb-separator">/</span>
+            <span className="dashboard-breadcrumb-separator" aria-hidden="true">/</span>
             <span className="dashboard-breadcrumb-item">Flight Monitoring</span>
-          </div>
-          
-          {/* View Tabs */}
-          <div className="dashboard-view-tabs">
-            <button className="dashboard-view-tab active">List</button>
-            <button className="dashboard-view-tab">Board</button>
-            <button className="dashboard-view-tab">Timeline</button>
-            <button className="dashboard-view-tab">Analytics</button>
-          </div>
-
-          {/* Action Bar */}
-          <div className="dashboard-action-bar">
-            <button className="dashboard-action-btn">
-              <span>Group: Status</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <button className="dashboard-action-btn">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span>Filter</span>
-            </button>
-            <button className="dashboard-action-btn primary">
-              <span>+</span>
-              <span>Add Flight</span>
-            </button>
-          </div>
-        </div>
+          </nav>
+        </header>
 
         {/* Stats Cards */}
-        <div className="dashboard-stats-grid">
-              <StatCard 
-                label="Total Flights" 
-                value={stats.total}
-                icon="✈️"
-                gradient="from-blue-500 to-cyan-500"
-              />
-              <StatCard 
-                label="High Risk" 
-                value={stats.highRisk}
-                color="text-red-600 dark:text-red-400"
-                icon="⚠️"
-                gradient="from-red-500 to-rose-500"
-              />
-              <StatCard 
-                label="Medium Risk" 
-                value={stats.mediumRisk}
-                color="text-orange-600 dark:text-orange-400"
-                icon="⚡"
-                gradient="from-orange-500 to-amber-500"
-              />
-              <StatCard 
-                label="Low Risk" 
-                value={stats.lowRisk}
-                color="text-green-600 dark:text-green-400"
-                icon="✅"
-                gradient="from-green-500 to-emerald-500"
-              />
-              <StatCard 
-                label="Avg Delay" 
-                value={`${stats.avgDelay}m`}
-                icon="⏱️"
-                gradient="from-purple-500 to-indigo-500"
-              />
-            </div>
+        <section className="dashboard-stats-grid" aria-label="Flight statistics">
+          <StatCard 
+            label="Total Flights" 
+            value={stats.total}
+            icon="✈️"
+            gradient="from-blue-500 to-cyan-500"
+          />
+          <StatCard 
+            label="High Risk" 
+            value={stats.highRisk}
+            color="red"
+            icon="⚠️"
+            gradient="from-red-500 to-rose-500"
+          />
+          <StatCard 
+            label="Medium Risk" 
+            value={stats.mediumRisk}
+            color="orange"
+            icon="⚡"
+            gradient="from-orange-500 to-amber-500"
+          />
+          <StatCard 
+            label="Low Risk" 
+            value={stats.lowRisk}
+            color="green"
+            icon="✅"
+            gradient="from-green-500 to-emerald-500"
+          />
+          <StatCard 
+            label="Avg Delay" 
+            value={`${stats.avgDelay}m`}
+            icon="⏱️"
+            gradient="from-purple-500 to-indigo-500"
+          />
+        </section>
 
         {/* Grouped Flight Lists */}
-        <div className="dashboard-groups">
+        <section className="dashboard-groups" aria-label="Flight groups">
           {Object.entries(groupedFlights).map(([groupName, groupFlights]) => (
-            <div key={groupName} className="dashboard-group">
+            <article key={groupName} className="dashboard-group">
               {/* Group Header */}
-              <div className={`dashboard-group-header ${getGroupColor(groupName)}-risk`}>
+              <header className={`dashboard-group-header ${getGroupColor(groupName)}-risk`}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button aria-label={`Toggle ${groupName} group`} type="button">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   <h3>{groupName}</h3>
-                  <span>{groupFlights.length}</span>
+                  <span aria-label={`${groupFlights.length} flights in ${groupName}`}>{groupFlights.length}</span>
                 </div>
-              </div>
+              </header>
 
               {/* Flight Cards Grid */}
               <div className="dashboard-group-content">
@@ -205,22 +177,16 @@ export const Dashboard = () => {
                     </div>
                   ))}
                 </div>
-                
-                {/* Add Flight Button */}
-                <button className="dashboard-add-flight-btn">
-                  <span>+</span>
-                  <span>Add Flight</span>
-                </button>
               </div>
-            </div>
+            </article>
           ))}
-        </div>
+        </section>
 
         {/* Empty State */}
         {filteredAndSortedFlights.length === 0 && (
-          <div className="dashboard-empty-state">
-            <div className="dashboard-empty-icon">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="dashboard-empty-state" role="status" aria-live="polite">
+            <div className="dashboard-empty-icon" aria-hidden="true">
+              <svg className="w-8 h-8" style={{ color: 'var(--color-text-tertiary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -230,7 +196,7 @@ export const Dashboard = () => {
             </p>
           </div>
         )}
-      </div>
+      </main>
     </Layout>
   )
 }

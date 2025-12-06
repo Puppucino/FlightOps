@@ -10,14 +10,14 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ title, children, className = '', icon }) => {
   return (
-    <div className={`card ${className}`}>
+    <article className={`card ${className}`}>
       {title && (
-        <div className="card-header">
-          {icon && <span className="card-icon">{icon}</span>}
+        <header className="card-header">
+          {icon && <span className="card-icon" aria-hidden="true">{icon}</span>}
           <h3 className="card-title">{title}</h3>
-        </div>
+        </header>
       )}
       <div className="card-content">{children}</div>
-    </div>
+    </article>
   )
 }

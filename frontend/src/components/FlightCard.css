@@ -1,16 +1,30 @@
 /* Flight Card - Modern Clean Design */
 .flight-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
   padding: 16px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  box-shadow: 0 1px 3px var(--color-shadow);
 }
 
 .flight-card:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 8px 16px var(--color-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.flight-card:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
+.flight-card:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
 }
 
 .flight-card-content {
@@ -27,8 +41,8 @@
 .flight-icon-badge {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -58,24 +72,26 @@
 .flight-number {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-text-primary);
   margin: 0 0 4px 0;
   line-height: 1.4;
   letter-spacing: -0.01em;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-route {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-weight: 500;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .route-arrow {
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   font-weight: 400;
 }
 
@@ -104,33 +120,37 @@
   line-height: 1.4;
 }
 
-/* Weather Tag */
+/* Weather Tag - Using CSS variables for light/dark mode */
 .tag-weather {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: var(--color-tag-blue-bg);
+  color: var(--color-tag-blue-text);
 }
 
-/* Risk Tags */
+/* Risk Tags - Enhanced contrast for accessibility */
 .tag-risk {
   color: #ffffff;
+  font-weight: 700;
 }
 
 .tag-risk-high {
-  background: #ef4444;
+  background: #DC2626;
+  color: #FFFFFF;
 }
 
 .tag-risk-medium {
-  background: #f59e0b;
+  background: #D97706;
+  color: #FFFFFF;
 }
 
 .tag-risk-low {
-  background: #10b981;
+  background: #059669;
+  color: #FFFFFF;
 }
 
-/* Delayed Tag */
+/* Delayed Tag - Using CSS variables for light/dark mode */
 .tag-delayed {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-tag-red-bg);
+  color: var(--color-tag-red-text);
   text-transform: uppercase;
 }
 
@@ -140,7 +160,8 @@
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-info-left {
@@ -153,17 +174,18 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .info-icon {
   width: 14px;
   height: 14px;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
 }
 
 .delay-badge {
-  color: #dc2626;
+  color: var(--color-status-red);
   font-weight: 600;
 }
 
@@ -174,31 +196,31 @@
 }
 
 .confidence-label {
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   font-size: 11px;
   font-weight: 500;
 }
 
 .confidence-badge {
   padding: 3px 8px;
-  background: #f3e8ff;
-  color: #7c3aed;
-  border-radius: 4px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
 }
 
-/* Priority Badge Colors */
+/* Priority Badge Colors - Using CSS variables */
 .priority-high {
-  color: #dc2626;
+  color: var(--color-status-red);
 }
 
 .priority-medium {
-  color: #ea580c;
+  color: var(--color-status-orange);
 }
 
 .priority-low {
-  color: #3b82f6;
+  color: var(--color-status-blue);
 }
 
 /* Responsive */

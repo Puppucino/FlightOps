@@ -1,9 +1,117 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  
+  /* Light mode - Standard light theme with proper contrast */
+  --color-primary: #7B68EE;
+  --color-primary-hover: #6B5CE6;
+  --color-primary-light: #E8E4FF;
+  --color-primary-dark: #5A4FCF;
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F7F8FA;
+  --color-bg-tertiary: #F0F1F3;
+  --color-text-primary: #111827;
+  --color-text-secondary: #374151;
+  --color-text-tertiary: #6B7280;
+  --color-border: #E2E8F0;
+  --color-border-hover: #CBD5E0;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-shadow-hover: rgba(0, 0, 0, 0.12);
+  --color-error: #DC2626;
+  --color-error-light: #FEE2E2;
+  --color-success: #059669;
+  --color-success-light: #D1FAE5;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  
+  /* Status colors - Light mode */
+  --color-status-blue: #2563EB;
+  --color-status-blue-light: #DBEAFE;
+  --color-status-green: #059669;
+  --color-status-green-light: #D1FAE5;
+  --color-status-yellow: #D97706;
+  --color-status-yellow-light: #FEF3C7;
+  --color-status-orange: #F97316;
+  --color-status-orange-light: #FFEDD5;
+  --color-status-red: #DC2626;
+  --color-status-red-light: #FEE2E2;
+  --color-status-purple: #7C3AED;
+  --color-status-purple-light: #EDE9FE;
+  --color-status-gray: #6B7280;
+  --color-status-gray-light: #F3F4F6;
+  
+  /* Tag colors - Light mode */
+  --color-tag-blue-bg: #DBEAFE;
+  --color-tag-blue-text: #1E40AF;
+  --color-tag-green-bg: #D1FAE5;
+  --color-tag-green-text: #065F46;
+  --color-tag-yellow-bg: #FEF3C7;
+  --color-tag-yellow-text: #92400E;
+  --color-tag-red-bg: #FEE2E2;
+  --color-tag-red-text: #991B1B;
+  --color-tag-purple-bg: #EDE9FE;
+  --color-tag-purple-text: #5B21B6;
+  --color-tag-orange-bg: #FFEDD5;
+  --color-tag-orange-text: #9A3412;
+}
+
+.dark {
+  /* Dark mode - Standard dark theme with proper contrast */
+  --color-primary: #8B7DFF;
+  --color-primary-hover: #9B8DFF;
+  --color-primary-light: #3A2E5C;
+  --color-primary-dark: #6B5CE6;
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1F2937;
+  --color-bg-tertiary: #374151;
+  --color-text-primary: #F9FAFB;
+  --color-text-secondary: #E5E7EB;
+  --color-text-tertiary: #9CA3AF;
+  --color-border: #4B5563;
+  --color-border-hover: #6B7280;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-shadow-hover: rgba(0, 0, 0, 0.4);
+  --color-error: #F87171;
+  --color-error-light: #7F1D1D;
+  --color-success: #34D399;
+  --color-success-light: #064E3B;
+  --color-warning: #FBBF24;
+  --color-warning-light: #78350F;
+  
+  /* Status colors - Dark mode (lighter for better contrast) */
+  --color-status-blue: #60A5FA;
+  --color-status-blue-light: #1E3A8A;
+  --color-status-green: #34D399;
+  --color-status-green-light: #064E3B;
+  --color-status-yellow: #FBBF24;
+  --color-status-yellow-light: #78350F;
+  --color-status-orange: #FB923C;
+  --color-status-orange-light: #7C2D12;
+  --color-status-red: #F87171;
+  --color-status-red-light: #7F1D1D;
+  --color-status-purple: #A78BFA;
+  --color-status-purple-light: #4C1D95;
+  --color-status-gray: #9CA3AF;
+  --color-status-gray-light: #374151;
+  
+  /* Tag colors - Dark mode */
+  --color-tag-blue-bg: #1E3A8A;
+  --color-tag-blue-text: #93C5FD;
+  --color-tag-green-bg: #064E3B;
+  --color-tag-green-text: #6EE7B7;
+  --color-tag-yellow-bg: #78350F;
+  --color-tag-yellow-text: #FDE047;
+  --color-tag-red-bg: #7F1D1D;
+  --color-tag-red-text: #FCA5A5;
+  --color-tag-purple-bg: #4C1D95;
+  --color-tag-purple-text: #C4B5FD;
+  --color-tag-orange-bg: #7C2D12;
+  --color-tag-orange-text: #FDBA74;
 }
 
 * {
@@ -14,13 +122,17 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #root {
@@ -159,8 +271,8 @@ body {
 
 /* Smooth scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -168,26 +280,226 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 5px;
+  background: var(--color-border);
+  border-radius: 4px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
+  background: var(--color-border-hover);
 }
 
-/* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.5);
+  background: var(--color-border);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(75, 85, 99, 0.7);
+  background: var(--color-border-hover);
 }
 
-/* Focus visible styles */
+/* Focus visible styles - Enhanced for accessibility */
 *:focus-visible {
-  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px var(--color-bg-primary), 0 0 0 4px var(--color-primary-light);
+}
+
+/* Ensure buttons and interactive elements have proper focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: 4px;
+}
+
+/* Standardized button styles for accessibility */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 44px; /* Minimum touch target size for accessibility */
+  min-width: 44px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Standardized form element styles */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="number"],
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  min-height: 44px; /* Minimum touch target size */
+  padding: 10px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="text"]:hover,
+input[type="search"]:hover,
+input[type="email"]:hover,
+input[type="number"]:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--color-border-hover);
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+input[type="text"]:disabled,
+input[type="search"]:disabled,
+input[type="email"]:disabled,
+input[type="number"]:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--color-bg-tertiary);
+}
+
+/* Utility classes for Tailwind colors that work in both light and dark mode */
+/* These override Tailwind's default slate colors to use CSS variables */
+
+/* Text colors */
+.text-slate-300 {
+  color: var(--color-text-secondary) !important;
+}
+
+.text-slate-400 {
+  color: var(--color-text-tertiary) !important;
+}
+
+.text-slate-500 {
+  color: var(--color-text-tertiary) !important;
+}
+
+.text-slate-600 {
+  color: var(--color-text-tertiary) !important;
+}
+
+.text-white {
+  color: var(--color-text-primary) !important;
+}
+
+/* Background colors with opacity - using CSS variables */
+.bg-slate-700\/30,
+.bg-slate-700\/50 {
+  background-color: var(--color-bg-tertiary) !important;
+}
+
+.bg-slate-700\/30 {
+  opacity: 0.8;
+}
+
+.bg-slate-700\/50 {
+  opacity: 0.6;
+}
+
+.hover\:bg-slate-700\/50:hover {
+  background-color: var(--color-bg-tertiary) !important;
+  opacity: 0.6;
+}
+
+/* Border colors */
+.border-slate-700\/50 {
+  border-color: var(--color-border) !important;
+  opacity: 0.6;
+}
+
+.border-t {
+  border-top-width: 1px;
+}
+
+/* Status indicator text colors */
+.text-red-400 {
+  color: var(--color-status-red) !important;
+}
+
+.text-yellow-400 {
+  color: var(--color-status-yellow) !important;
+}
+
+.text-green-400 {
+  color: var(--color-status-green) !important;
+}
+
+.text-blue-400 {
+  color: var(--color-status-blue) !important;
+}
+
+.text-purple-400 {
+  color: var(--color-status-purple) !important;
+}
+
+.text-orange-400 {
+  color: var(--color-status-orange) !important;
+}
+
+/* Status indicator background colors */
+.bg-red-500\/20 {
+  background-color: var(--color-status-red-light) !important;
+  opacity: 0.8;
+}
+
+.bg-orange-500\/20 {
+  background-color: var(--color-status-orange-light) !important;
+  opacity: 0.8;
+}
+
+.hover\:bg-orange-500\/30:hover {
+  background-color: var(--color-status-orange-light) !important;
+  opacity: 0.9;
+}
+
+.bg-green-500\/50 {
+  background-color: var(--color-status-green-light) !important;
+  opacity: 0.6;
+}
+
+.hover\:bg-green-500\/70:hover {
+  background-color: var(--color-status-green-light) !important;
+  opacity: 0.8;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 1000;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  top: 0;
 }

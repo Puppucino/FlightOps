@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTheme } from '../contexts/ThemeContext'
 import './Header.css'
 
 interface HeaderProps {
@@ -16,6 +17,7 @@ export const Header = ({
 }: HeaderProps) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { theme, toggleTheme } = useTheme()
 
   const isDetailPage = location.pathname.includes('/cargo-analytics/') && location.pathname !== '/cargo-analytics'
   const shouldShowBack = showBackButton !== undefined ? showBackButton : isDetailPage
@@ -47,40 +49,62 @@ export const Header = ({
   }
 
   return (
-    <div className="main-header">
+    <header className="main-header" role="banner">
       <div className="header-left">
         {shouldShowBack && (
-          <button className="back-button" onClick={() => navigate('/cargo-analytics')}>
+          <button 
+            className="back-button" 
+            onClick={() => navigate('/cargo-analytics')}
+            aria-label="Go back to cargo analytics list"
+            type="button"
+          >
             ← Back
           </button>
         )}
-        <div className="header-breadcrumb">
+        <nav className="header-breadcrumb" aria-label="Breadcrumb navigation">
           <span className="breadcrumb-item">{getBreadcrumb()}</span>
           {(isDetailPage || location.pathname === '/flight-ops') && (
             <>
-              <span className="breadcrumb-separator">/</span>
+              <span className="breadcrumb-separator" aria-hidden="true">/</span>
               <span className="breadcrumb-item">{getViewTitle()}</span>
             </>
           )}
-        </div>
-        <button className="favorite-btn">⭐</button>
+        </nav>
       </div>
       <div className="header-center">
+        <label htmlFor="header-search-input" className="sr-only">
+          Search flights, cargo, and aircraft
+        </label>
         <input
-          type="text"
+          id="header-search-input"
+          type="search"
           className="header-search"
           placeholder="Search flights, cargo, aircraft..."
           value={searchQuery}
           onChange={(e) => onSearchChange?.(e.target.value)}
+          aria-label="Search flights, cargo, and aircraft"
         />
       </div>
       <div className="header-right">
-        <button className="header-icon-btn">🔔</button>
-        <button className="header-icon-btn">⚙️</button>
-        <button className="header-icon-btn">🤖</button>
-        <button className="header-icon-btn">👤</button>
-        <button className="create-btn">+ Create</button>
+        <button 
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          aria-pressed={theme === 'dark'}
+          title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          type="button"
+        >
+          {theme === 'light' ? (
+            <svg className="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          ) : (
+            <svg className="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          )}
+        </button>
       </div>
-    </div>
+    </header>
   )
 }

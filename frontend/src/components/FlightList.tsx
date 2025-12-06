@@ -97,16 +97,22 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
   const groupedFlights = getGroupedFlights(filteredFlights, groupBy)
 
   const getGroupColor = (groupName: string) => {
-    const statusColors: Record<string, string> = {
-      SCHEDULED: '#3b82f6',
-      DEPARTED: '#8b5cf6',
-      IN_PROGRESS: '#8b5cf6',
-      ARRIVED: '#10b981',
-      COMPLETED: '#10b981',
-      DELAYED: '#f59e0b',
-      CANCELLED: '#ef4444',
+    // Use CSS variables for colors that work in both light and dark mode
+    const root = document.documentElement
+    const getCSSVar = (varName: string, fallback: string) => {
+      return getComputedStyle(root).getPropertyValue(varName).trim() || fallback
     }
-    return statusColors[groupName] || '#6b7280'
+    
+    const statusColors: Record<string, string> = {
+      SCHEDULED: getCSSVar('--color-status-blue', '#3b82f6'),
+      DEPARTED: getCSSVar('--color-status-purple', '#8b5cf6'),
+      IN_PROGRESS: getCSSVar('--color-status-purple', '#8b5cf6'),
+      ARRIVED: getCSSVar('--color-status-green', '#10b981'),
+      COMPLETED: getCSSVar('--color-status-green', '#10b981'),
+      DELAYED: getCSSVar('--color-status-orange', '#f59e0b'),
+      CANCELLED: getCSSVar('--color-status-red', '#ef4444'),
+    }
+    return statusColors[groupName] || getCSSVar('--color-status-gray', '#6b7280')
   }
 
   if (loading) {
@@ -129,9 +135,13 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
 
   return (
     <div className="flight-list-container">
-      <div className="flight-list-controls">
+      <div className="flight-list-controls" role="toolbar" aria-label="Flight list controls">
         <div className="controls-left">
+          <label htmlFor="group-selector" className="sr-only">
+            Group flights by
+          </label>
           <select
+            id="group-selector"
             className="group-selector"
             value={groupBy}
             onChange={(e) => {
@@ -139,6 +149,7 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
               const groups = getGroupedFlights(filteredFlights, newGroupBy)
               setExpandedGroups(new Set(Object.keys(groups)))
             }}
+            aria-label="Group flights by"
           >
             <option value="status">Group: Status</option>
             <option value="destination">Group: Destination</option>
@@ -147,17 +158,27 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
           </select>
         </div>
         <div className="controls-right">
+          <label htmlFor="flight-search-input" className="sr-only">
+            Search flights
+          </label>
           <input
-            type="text"
+            id="flight-search-input"
+            type="search"
             className="search-input"
             placeholder="Search flights..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search flights"
           />
+          <label htmlFor="status-filter-selector" className="sr-only">
+            Filter by status
+          </label>
           <select
+            id="status-filter-selector"
             className="filter-selector"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
+            aria-label="Filter flights by status"
           >
             <option value="all">All Status</option>
             <option value="scheduled">Scheduled</option>
@@ -167,7 +188,6 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
             <option value="delayed">Delayed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <button className="customize-btn">Customize</button>
         </div>
       </div>
 
@@ -176,19 +196,31 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([groupName, groupFlights]) => (
             <div key={groupName} className="flight-group">
-              <div
+              <header
                 className="flight-group-header"
                 onClick={() => toggleGroup(groupName)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    toggleGroup(groupName)
+                  }
+                }}
                 style={{ borderLeftColor: getGroupColor(groupName) }}
+                role="button"
+                tabIndex={0}
+                aria-label={`${expandedGroups.has(groupName) ? 'Collapse' : 'Expand'} ${groupName} group`}
+                aria-expanded={expandedGroups.has(groupName)}
               >
                 <div className="group-header-left">
-                  <span className="group-toggle">
+                  <span className="group-toggle" aria-hidden="true">
                     {expandedGroups.has(groupName) ? '▼' : '▶'}
                   </span>
-                  <span className="group-name">{groupName}</span>
-                  <span className="group-count">({groupFlights.length})</span>
+                  <h3 className="group-name">{groupName}</h3>
+                  <span className="group-count" aria-label={`${groupFlights.length} flights`}>
+                    ({groupFlights.length})
+                  </span>
                 </div>
-              </div>
+              </header>
               {expandedGroups.has(groupName) && (
                 <div className="flight-group-items">
                   {groupFlights.map((flight) => (
@@ -198,7 +230,6 @@ export const FlightList: React.FC<FlightListProps> = ({ onFlightClick, groupBy =
                       onClick={onFlightClick}
                     />
                   ))}
-                  <button className="add-flight-btn">+ Add Flight</button>
                 </div>
               )}
             </div>

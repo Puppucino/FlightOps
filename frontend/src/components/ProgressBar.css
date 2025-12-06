@@ -20,22 +20,25 @@
   align-items: center;
   margin-bottom: 8px;
   font-size: 14px;
-  color: #374151;
+  color: var(--color-text-secondary);
   font-weight: 500;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-percentage {
-  color: #111827;
+  color: var(--color-text-primary);
   font-weight: 600;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-bar {
   width: 100%;
   height: var(--progress-height);
-  background: #e5e7eb;
+  background: var(--color-border);
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-fill {
@@ -71,25 +74,27 @@
   }
 }
 
+/* Enhanced color contrast for accessibility - Using CSS variables */
 .progress-primary .progress-fill {
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, var(--color-status-blue), var(--color-primary));
 }
 
 .progress-success .progress-fill {
-  background: linear-gradient(90deg, #10b981, #34d399);
+  background: linear-gradient(90deg, var(--color-status-green), var(--color-success));
 }
 
 .progress-warning .progress-fill {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  background: linear-gradient(90deg, var(--color-status-yellow), var(--color-warning));
 }
 
 .progress-danger .progress-fill {
-  background: linear-gradient(90deg, #ef4444, #f87171);
+  background: linear-gradient(90deg, var(--color-status-red), var(--color-error));
 }
 
 .progress-percentage-text {
   margin-top: 8px;
   text-align: right;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -24,22 +24,32 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     <div className={`progress-bar-container progress-${size}`}>
       {label && (
         <div className="progress-label">
-          <span>{label}</span>
-          {showPercentage && <span className="progress-percentage">{percentage.toFixed(1)}%</span>}
+          <span id={`progress-label-${Math.random().toString(36).substr(2, 9)}`}>{label}</span>
+          {showPercentage && (
+            <span className="progress-percentage" aria-hidden="true">
+              {percentage.toFixed(1)}%
+            </span>
+          )}
         </div>
       )}
-      <div className={`progress-bar progress-${color}`}>
+      <div 
+        className={`progress-bar progress-${color}`}
+        role="progressbar"
+        aria-valuenow={percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label || `Progress: ${percentage.toFixed(1)}%`}
+        aria-live="polite"
+      >
         <div
           className="progress-fill"
           style={{ width: `${percentage}%` }}
-          role="progressbar"
-          aria-valuenow={percentage}
-          aria-valuemin={0}
-          aria-valuemax={100}
         />
       </div>
       {!label && showPercentage && (
-        <div className="progress-percentage-text">{percentage.toFixed(1)}%</div>
+        <div className="progress-percentage-text" aria-hidden="true">
+          {percentage.toFixed(1)}%
+        </div>
       )}
     </div>
   )

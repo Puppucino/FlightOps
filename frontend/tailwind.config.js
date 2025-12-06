@@ -5,9 +5,21 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Use CSS variables for theme-aware colors
+        'bg-primary': 'var(--color-bg-primary)',
+        'bg-secondary': 'var(--color-bg-secondary)',
+        'bg-tertiary': 'var(--color-bg-tertiary)',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-tertiary': 'var(--color-text-tertiary)',
+        'border': 'var(--color-border)',
+        'primary': 'var(--color-primary)',
+      },
+    },
   },
   plugins: [],
-  darkMode: 'media', // Uses prefers-color-scheme media query for system dark mode detection
+  darkMode: 'class', // Manual toggle with 'dark' class
 }
 

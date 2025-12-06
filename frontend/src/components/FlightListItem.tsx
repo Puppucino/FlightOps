@@ -61,16 +61,30 @@ export const FlightListItem: React.FC<FlightListItemProps> = ({ flight, onClick 
   const statusColor = getStatusColor(flight.flight_status)
 
   return (
-    <div className="flight-list-item" onClick={() => onClick(flight.id)}>
+    <article 
+      className="flight-list-item" 
+      onClick={() => onClick(flight.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick(flight.id)
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Flight ${flight.flight_number} from ${flight.origin_airport_code} to ${flight.destination_airport_code}, ${flight.flight_status}`}
+    >
       <div className="flight-item-main">
         <div className="flight-name-section">
-          <span className="flight-number">{flight.flight_number}</span>
+          <h3 className="flight-number">{flight.flight_number}</h3>
           <span className="flight-route">
-            {flight.origin_airport_code} → {flight.destination_airport_code}
+            <span>{flight.origin_airport_code}</span>
+            <span aria-hidden="true"> → </span>
+            <span>{flight.destination_airport_code}</span>
           </span>
-          <div className="flight-tags">
-            <span className="tag tag-type">{flight.flight_type}</span>
-            <span className={`tag tag-status tag-${statusColor}`}>
+          <div className="flight-tags" role="list" aria-label="Flight tags">
+            <span className="tag tag-type" role="listitem">{flight.flight_type}</span>
+            <span className={`tag tag-status tag-${statusColor}`} role="listitem" aria-label={`Status: ${flight.flight_status}`}>
               {flight.flight_status}
             </span>
           </div>
@@ -97,14 +111,16 @@ export const FlightListItem: React.FC<FlightListItemProps> = ({ flight, onClick 
         <div className="flight-date">
           <span className="date-text">{formatDate(flight.scheduled_departure)}</span>
         </div>
-        <div className={`flight-priority priority-${priority}`}>
-          {priority === 'urgent' && '🔴'}
-          {priority === 'high' && '🟠'}
-          {priority === 'normal' && '🟡'}
-          {priority === 'low' && '🟢'}
+        <div className={`flight-priority priority-${priority}`} aria-label={`Priority: ${priority}`}>
+          <span aria-hidden="true">
+            {priority === 'urgent' && '🔴'}
+            {priority === 'high' && '🟠'}
+            {priority === 'normal' && '🟡'}
+            {priority === 'low' && '🟢'}
+          </span>
           <span className="priority-text">{priority}</span>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

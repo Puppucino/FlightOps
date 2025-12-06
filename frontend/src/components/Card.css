@@ -1,15 +1,26 @@
 .card {
-  background: #ffffff;
+  background: var(--color-bg-primary);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px var(--color-shadow);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 16px var(--color-shadow-hover);
+  border-color: var(--color-border-hover);
+}
+
+.card:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .card-header {
@@ -18,7 +29,8 @@
   gap: 12px;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-icon {
@@ -31,10 +43,12 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
-  letter-spacing: 0.5px;
+  color: var(--color-text-primary);
+  letter-spacing: 0.3px;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-content {
-  color: #374151;
+  color: var(--color-text-secondary);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -1,98 +1,234 @@
+/* StatCard - Using CSS Variables for Light/Dark Mode Support */
 .stat-card {
-  background: #ffffff;
+  position: relative;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid #e5e7eb;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px var(--color-shadow);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--stat-color), transparent);
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px var(--color-shadow-hover);
+  border-color: var(--color-border-hover);
 }
 
-.stat-blue {
-  --stat-color: #3b82f6;
+.stat-card:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
-.stat-green {
-  --stat-color: #10b981;
+.stat-card:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
-.stat-yellow {
-  --stat-color: #f59e0b;
+/* Border Colors - Work in both light and dark mode */
+.stat-card-border-default {
+  border-left-color: var(--color-border);
 }
 
-.stat-red {
-  --stat-color: #ef4444;
+.stat-card-border-blue {
+  border-left-color: #3B82F6;
 }
 
-.stat-purple {
-  --stat-color: #8b5cf6;
+.stat-card-border-green {
+  border-left-color: #10B981;
 }
 
-.stat-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  opacity: 0.8;
+.stat-card-border-yellow {
+  border-left-color: #F59E0B;
 }
 
-.stat-content {
+.stat-card-border-purple {
+  border-left-color: #8B5CF6;
+}
+
+.stat-card-border-red {
+  border-left-color: #EF4444;
+}
+
+.stat-card-border-orange {
+  border-left-color: #F97316;
+}
+
+/* Gradient Background Effect */
+.stat-card-gradient {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  opacity: 0.05;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.stat-card:hover .stat-card-gradient {
+  opacity: 0.1;
+}
+
+.dark .stat-card-gradient {
+  opacity: 0.1;
+}
+
+.dark .stat-card:hover .stat-card-gradient {
+  opacity: 0.15;
+}
+
+/* Content */
+.stat-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
+  margin-bottom: 12px;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.stat-card-icon {
+  font-size: 20px;
+  line-height: 1;
 }
 
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #111827;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.stat-unit {
-  font-size: 16px;
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.stat-trend {
+.stat-card-label {
   font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 8px 0;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card-value-default {
+  color: var(--color-text-primary);
+}
+
+.stat-card-value-red {
+  color: #DC2626;
+}
+
+.dark .stat-card-value-red {
+  color: #F87171;
+}
+
+.stat-card-value-orange {
+  color: #EA580C;
+}
+
+.dark .stat-card-value-orange {
+  color: #FB923C;
+}
+
+.stat-card-value-green {
+  color: #059669;
+}
+
+.dark .stat-card-value-green {
+  color: #34D399;
+}
+
+.stat-card-value-blue {
+  color: #2563EB;
+}
+
+.dark .stat-card-value-blue {
+  color: #60A5FA;
+}
+
+.stat-card-value-purple {
+  color: #7C3AED;
+}
+
+.dark .stat-card-value-purple {
+  color: #A78BFA;
+}
+
+.stat-card-value-yellow {
+  color: #D97706;
+}
+
+.dark .stat-card-value-yellow {
+  color: #FBBF24;
+}
+
+/* Trend Colors */
+.stat-card-trend {
+  font-size: 12px;
+  font-weight: 500;
   margin-top: 4px;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.stat-trend-up {
-  color: #10b981;
+.stat-card-trend-up {
+  color: #059669;
 }
 
-.stat-trend-down {
-  color: #ef4444;
+.dark .stat-card-trend-up {
+  color: #34D399;
 }
 
-.stat-trend-neutral {
-  color: #6b7280;
+.stat-card-trend-down {
+  color: #DC2626;
+}
+
+.dark .stat-card-trend-down {
+  color: #F87171;
+}
+
+.stat-card-trend-neutral {
+  color: var(--color-text-secondary);
+}
+
+/* Accent Bar */
+.stat-card-accent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 0 0 12px 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card-accent-default {
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.stat-card-accent-blue {
+  background: linear-gradient(90deg, transparent, #3B82F6, transparent);
+}
+
+.stat-card-accent-green {
+  background: linear-gradient(90deg, transparent, #10B981, transparent);
+}
+
+.stat-card-accent-yellow {
+  background: linear-gradient(90deg, transparent, #F59E0B, transparent);
+}
+
+.stat-card-accent-purple {
+  background: linear-gradient(90deg, transparent, #8B5CF6, transparent);
+}
+
+.stat-card-accent-red {
+  background: linear-gradient(90deg, transparent, #EF4444, transparent);
+}
+
+.stat-card-accent-orange {
+  background: linear-gradient(90deg, transparent, #F97316, transparent);
 }

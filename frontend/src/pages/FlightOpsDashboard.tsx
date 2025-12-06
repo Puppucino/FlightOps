@@ -89,51 +89,61 @@ const FlightOpsDashboard = () => {
   const visibleAlerts = alerts.filter(alert => !dismissedAlerts.has(alert.id));
 
   const renderDelaysTab = () => (
-    <div>
+    <section aria-label="Flight delays information">
       <div className="flight-ops-stats">
-        <div className="flight-ops-stat-card">
+        <article className="flight-ops-stat-card" role="article" aria-label="Total flights">
           <div className="flex items-center justify-between">
             <div>
               <p className="flight-ops-stat-label">Total Flights</p>
               <p className="flight-ops-stat-value">{flights.length}</p>
             </div>
-            <Plane className="w-12 h-12 text-blue-400 opacity-50" />
+            <Plane className="w-12 h-12 text-blue-400 opacity-50" aria-hidden="true" />
           </div>
-        </div>
-        <div className="flight-ops-stat-card" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05))', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+        </article>
+        <article className="flight-ops-stat-card flight-ops-stat-card-red" role="article" aria-label="High risk flights">
           <div className="flex items-center justify-between">
             <div>
-              <p className="flight-ops-stat-label" style={{ color: '#f87171' }}>High Risk</p>
+              <p className="flight-ops-stat-label flight-ops-stat-label-red">High Risk</p>
               <p className="flight-ops-stat-value">{flights.filter(f => f.risk >= 70).length}</p>
             </div>
-            <AlertCircle className="w-12 h-12 text-red-400 opacity-50" />
+            <AlertCircle className="w-12 h-12 text-red-400 opacity-50" aria-hidden="true" />
           </div>
-        </div>
-        <div className="flight-ops-stat-card" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))', borderColor: 'rgba(245, 158, 11, 0.2)' }}>
+        </article>
+        <article className="flight-ops-stat-card flight-ops-stat-card-yellow" role="article" aria-label="Average delay">
           <div className="flex items-center justify-between">
             <div>
-              <p className="flight-ops-stat-label" style={{ color: '#fbbf24' }}>Avg Delay</p>
+              <p className="flight-ops-stat-label flight-ops-stat-label-yellow">Avg Delay</p>
               <p className="flight-ops-stat-value">{Math.round(flights.reduce((sum, f) => sum + f.delay, 0) / flights.length)} min</p>
             </div>
-            <Clock className="w-12 h-12 text-yellow-400 opacity-50" />
+            <Clock className="w-12 h-12 text-yellow-400 opacity-50" aria-hidden="true" />
           </div>
-        </div>
+        </article>
       </div>
 
       <div className="flight-ops-flight-list">
         {flights.map((flight, index) => {
           const isExpanded = expandedFlights.has(flight.id);
           return (
-            <div 
+            <article 
               key={flight.id} 
               className="flight-ops-flight-card"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => toggleFlightExpansion(flight.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleFlightExpansion(flight.id)
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Flight ${flight.id} details`}
+              aria-expanded={expandedFlights.has(flight.id)}
             >
               <div className="flight-ops-flight-header">
-                <div className="flight-ops-flight-info">
+                  <div className="flight-ops-flight-info">
                   <div className="flight-ops-flight-icon">
-                    <Plane className="w-6 h-6 text-blue-400" />
+                    <Plane className="w-6 h-6 text-blue-400" aria-hidden="true" />
                   </div>
                   <div className="flight-ops-flight-details">
                     <h3>{flight.id}</h3>
@@ -156,22 +166,24 @@ const FlightOpsDashboard = () => {
                       toggleFlightExpansion(flight.id);
                     }}
                     className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
+                    aria-label={isExpanded ? `Collapse ${flight.id} details` : `Expand ${flight.id} details`}
+                    type="button"
                   >
                     {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-slate-400" />
+                      <ChevronUp className="w-5 h-5 text-slate-400" aria-hidden="true" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-slate-400" />
+                      <ChevronDown className="w-5 h-5 text-slate-400" aria-hidden="true" />
                     )}
                   </button>
                 </div>
               </div>
               <div className="flex items-center gap-[10px] mt-4 pt-4 border-t border-slate-700/50">
                 <div className="flex items-center gap-[10px]">
-                  <Cloud className="w-4 h-4 text-slate-400" />
+                  <Cloud className="w-4 h-4 text-slate-400" aria-hidden="true" />
                   <span className="text-sm text-slate-300">{flight.weather}</span>
                 </div>
                 <div className="flex items-center gap-[10px]">
-                  <Radio className="w-4 h-4 text-slate-400" />
+                  <Radio className="w-4 h-4 text-slate-400" aria-hidden="true" />
                   <span className="text-sm text-slate-300">Traffic: {flight.traffic}</span>
                 </div>
               </div>
@@ -197,29 +209,31 @@ const FlightOpsDashboard = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </article>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 
   const renderPassengersTab = () => (
-    <div>
+    <section>
       <div className="flight-ops-passenger-section">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white">Passenger Flow Prediction</h3>
             <p className="text-sm text-slate-400 mt-1">Based on historical patterns</p>
           </div>
-          <Users className="w-10 h-10 text-purple-400 opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-300" />
+          <Users className="w-10 h-10 text-purple-400 opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-300" aria-hidden="true" />
         </div>
         <div>
           {passengerData.map((data, idx) => (
-            <div 
+            <article 
               key={idx} 
               className="flight-ops-passenger-item"
               style={{ animationDelay: `${idx * 100}ms` }}
+              role="article"
+              aria-label={`Passenger flow at ${data.hour}`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">{data.hour}</span>
@@ -245,25 +259,27 @@ const FlightOpsDashboard = () => {
                   />
                 )}
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 
   const renderCargoTab = () => (
-    <div>
+    <section>
       {cargoData.map((cargo, idx) => (
-        <div 
+        <article 
           key={cargo.flight} 
           className="flight-ops-cargo-item"
           style={{ animationDelay: `${idx * 100}ms` }}
+          role="article"
+          aria-label={`Cargo data for flight ${cargo.flight}`}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="bg-orange-500/20 p-3 rounded-lg group-hover:bg-orange-500/30 transition-colors group-hover:scale-110 duration-300">
-                <Package className="w-6 h-6 text-orange-400 group-hover:rotate-12 transition-transform" />
+                <Package className="w-6 h-6 text-orange-400 group-hover:rotate-12 transition-transform" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white group-hover:text-orange-300 transition-colors">{cargo.flight}</h3>
@@ -285,9 +301,9 @@ const FlightOpsDashboard = () => {
               style={{ width: `${cargo.utilization}%` }}
             />
           </div>
-        </div>
+        </article>
       ))}
-    </div>
+    </section>
   );
 
   const tabs = [
@@ -300,23 +316,23 @@ const FlightOpsDashboard = () => {
 
   return (
     <Layout>
-      <div className="flight-ops-container">
+      <main className="flight-ops-container" role="main">
         <div className="flight-ops-wrapper">
           {/* Header Section */}
-          <div className="flight-ops-header">
+          <header className="flight-ops-header">
             <h1 className="flight-ops-title">
               Flight Operations Command Center
             </h1>
             <p className="flight-ops-subtitle">Real-time monitoring and predictive analytics</p>
-          </div>
+          </header>
 
           {/* Alerts Section */}
-          <div className="flight-ops-alerts">
+          <section className="flight-ops-alerts" aria-label="Live alerts">
             <div className="flight-ops-alerts-header">
-              <AlertCircle className="w-5 h-5 text-red-400 animate-pulse" />
-              <span>Live Alerts</span>
+              <AlertCircle className="w-5 h-5 text-red-400 animate-pulse" aria-hidden="true" />
+              <h2>Live Alerts</h2>
               {visibleAlerts.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-bold rounded-full border border-red-500/30">
+                <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-bold rounded-full border border-red-500/30" aria-label={`${visibleAlerts.length} active alerts`}>
                   {visibleAlerts.length}
                 </span>
               )}
@@ -327,9 +343,11 @@ const FlightOpsDashboard = () => {
                   key={alert.id} 
                   className={`flight-ops-alert-item ${alert.severity} group`}
                   style={{ animationDelay: `${index * 100}ms` }}
+                  role="alert"
+                  aria-live="polite"
                 >
                   <div className="flex items-center space-x-3 flex-1">
-                    <AlertCircle className={`w-5 h-5 ${alert.severity === 'high' ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`} />
+                    <AlertCircle className={`w-5 h-5 ${alert.severity === 'high' ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`} aria-hidden="true" />
                     <div className="flex-1">
                       {alert.flight && (
                         <p className="text-white font-semibold">Flight {alert.flight} delay risk {alert.risk}%</p>
@@ -340,31 +358,32 @@ const FlightOpsDashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-[10px]">
-                    <span className="text-xs text-slate-400">{alert.time}</span>
+                    <time className="text-xs text-slate-400" dateTime={alert.time}>{alert.time}</time>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         dismissAlert(alert.id);
                       }}
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all duration-200"
-                      aria-label="Dismiss alert"
+                      aria-label={`Dismiss alert ${alert.id}`}
+                      type="button"
                     >
-                      <X className="w-4 h-4 text-slate-400 hover:text-white" />
+                      <X className="w-4 h-4 text-slate-400 hover:text-white" aria-hidden="true" />
                     </button>
                   </div>
                 </div>
               ))}
               {visibleAlerts.length === 0 && (
-                <div className="text-center py-8 text-slate-500">
-                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <div className="text-center py-8 text-slate-500" role="status" aria-live="polite">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
                   <p>No active alerts</p>
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Tabs Section */}
-          <div className="flight-ops-tabs">
+          <nav className="flight-ops-tabs" role="tablist" aria-label="Flight operations tabs">
             {tabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -373,34 +392,44 @@ const FlightOpsDashboard = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flight-ops-tab ${isActive ? 'active' : ''}`}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`tabpanel-${tab.id}`}
+                  id={`tab-${tab.id}`}
+                  type="button"
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-5 h-5" aria-hidden="true" />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
-          </div>
+          </nav>
 
           {/* Content Section */}
-          <div className="flight-ops-content">
+          <div 
+            className="flight-ops-content"
+            role="tabpanel"
+            id={`tabpanel-${activeTab}`}
+            aria-labelledby={`tab-${activeTab}`}
+          >
             {activeTab === 'delays' && renderDelaysTab()}
             {activeTab === 'passengers' && renderPassengersTab()}
             {activeTab === 'cargo' && renderCargoTab()}
             {activeTab === 'weather' && (
-              <div className="text-center py-12">
-                <Cloud className="w-16 h-16 text-slate-600 mx-auto mb-4 animate-pulse" />
+              <div className="text-center py-12" role="status" aria-live="polite">
+                <Cloud className="w-16 h-16 text-slate-600 mx-auto mb-4 animate-pulse" aria-hidden="true" />
                 <p className="text-slate-400">Weather module coming soon</p>
               </div>
             )}
             {activeTab === 'traffic' && (
-              <div className="text-center py-12">
-                <TrendingUp className="w-16 h-16 text-slate-600 mx-auto mb-4 animate-pulse" />
+              <div className="text-center py-12" role="status" aria-live="polite">
+                <TrendingUp className="w-16 h-16 text-slate-600 mx-auto mb-4 animate-pulse" aria-hidden="true" />
                 <p className="text-slate-400">Traffic analytics coming soon</p>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </main>
     </Layout>
   );
 };

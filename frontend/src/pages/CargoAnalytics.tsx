@@ -81,13 +81,19 @@ const CargoAnalytics: React.FC = () => {
 
   if (error || !analyticsData) {
     return (
-      <div className="cargo-analytics-container">
-        <div className="error-message">
+      <main className="cargo-analytics-container" role="main">
+        <div className="error-message" role="alert">
           <h2>Error</h2>
           <p>{error || 'No data available'}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
+          <button 
+            onClick={() => window.location.reload()}
+            aria-label="Retry loading cargo analytics"
+            type="button"
+          >
+            Retry
+          </button>
         </div>
-      </div>
+      </main>
     )
   }
 
@@ -109,10 +115,18 @@ const CargoAnalytics: React.FC = () => {
     confidence: 0
   }
 
-  // Prepare chart data
+  // Prepare chart data - Using CSS variables via getComputedStyle for dynamic colors
+  const getChartColors = () => {
+    const root = document.documentElement
+    const blue = getComputedStyle(root).getPropertyValue('--color-status-blue').trim() || '#3B82F6'
+    const green = getComputedStyle(root).getPropertyValue('--color-status-green').trim() || '#10B981'
+    return { blue, green }
+  }
+  
+  const chartColors = getChartColors()
   const storageData = [
-    { name: 'Used', value: storage_availability.current_cargo_tonnes, color: '#3b82f6' },
-    { name: 'Available', value: storage_availability.available_capacity_tonnes, color: '#10b981' },
+    { name: 'Used', value: storage_availability.current_cargo_tonnes, color: chartColors.blue },
+    { name: 'Available', value: storage_availability.available_capacity_tonnes, color: chartColors.green },
   ]
 
   const utilizationData = [
@@ -150,16 +164,28 @@ const CargoAnalytics: React.FC = () => {
   }
 
   return (
-    <div className="cargo-analytics-container">
-      <div className="cargo-analytics-header">
-        <button className="back-to-list-btn" onClick={() => navigate('/cargo-analytics')}>
+    <main className="cargo-analytics-container" role="main">
+      <header className="cargo-analytics-header">
+        <button 
+          className="back-to-list-btn" 
+          onClick={() => navigate('/cargo-analytics')}
+          aria-label="Go back to cargo analytics list"
+          type="button"
+        >
           ← Back to List
         </button>
         {availableFlights.length > 0 && (
+          <label htmlFor="flight-selector" className="sr-only">
+            Select flight
+          </label>
+        )}
+        {availableFlights.length > 0 && (
           <select
+            id="flight-selector"
             className="flight-selector"
             value={analyticsData?.flight.id || ''}
             onChange={(e) => navigate(`/cargo-analytics/${e.target.value}`)}
+            aria-label="Select flight to view analytics"
           >
             {availableFlights.map((f) => (
               <option key={f.id} value={f.id}>
@@ -177,6 +203,7 @@ const CargoAnalytics: React.FC = () => {
             className="days-selector"
             value={daysBeforeFlight}
             onChange={(e) => setDaysBeforeFlight(Number(e.target.value))}
+            aria-label="Select days before flight for prediction"
           >
             <option value={0}>Day of Flight</option>
             <option value={1}>1 Day Before</option>
@@ -186,7 +213,7 @@ const CargoAnalytics: React.FC = () => {
             <option value={30}>30 Days Before</option>
           </select>
         </div>
-      </div>
+      </header>
 
       {/* Flight Details Section */}
       <Card title="Flight Details" icon="✈️" className="flight-details-card">
@@ -238,28 +265,28 @@ const CargoAnalytics: React.FC = () => {
           label="Storage Utilization"
           value={`${storage_availability.utilization_percentage.toFixed(2)}%`}
           icon="📦"
-          color="text-blue-600 dark:text-blue-400"
+          color="blue"
           gradient="from-blue-500 to-blue-600"
         />
         <StatCard
           label="Available Capacity"
           value={`${storage_availability.available_capacity_tonnes.toFixed(2)} tonnes`}
           icon="📊"
-          color="text-green-600 dark:text-green-400"
+          color="green"
           gradient="from-green-500 to-green-600"
         />
         <StatCard
           label="Loading Progress"
           value={`${safeLoadingProgress.loading_percentage.toFixed(2)}%`}
           icon="⚡"
-          color="text-yellow-600 dark:text-yellow-400"
+          color="yellow"
           gradient="from-yellow-500 to-yellow-600"
         />
         <StatCard
           label="Predicted Demand"
           value={`${safePrediction.predicted_cargo_volume.toFixed(2)} tonnes`}
           icon="🔮"
-          color="text-purple-600 dark:text-purple-400"
+          color="purple"
           gradient="from-purple-500 to-purple-600"
           trend="up"
           trendValue={`${(safePrediction.confidence * 100).toFixed(0)}% confidence`}
@@ -314,10 +341,10 @@ const CargoAnalytics: React.FC = () => {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #e5e7eb',
+                      backgroundColor: 'var(--color-bg-primary)',
+                      border: '1px solid var(--color-border)',
                       borderRadius: '8px',
-                      color: '#111827',
+                      color: 'var(--color-text-primary)',
                     }}
                     formatter={(value: number) => `${value.toFixed(2)} tonnes`}
                   />
@@ -371,26 +398,26 @@ const CargoAnalytics: React.FC = () => {
           <AreaChart data={utilizationData}>
             <defs>
               <linearGradient id="colorUtilization" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="time" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" domain={[0, 100]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+            <XAxis dataKey="time" stroke="var(--color-text-secondary)" />
+            <YAxis stroke="var(--color-text-secondary)" domain={[0, 100]} />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #e5e7eb',
+                backgroundColor: 'var(--color-bg-primary)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
-                color: '#111827',
+                color: 'var(--color-text-primary)',
               }}
               formatter={(value: number) => [`${value.toFixed(1)}%`, 'Utilization']}
             />
             <Area
               type="monotone"
               dataKey="utilization"
-              stroke="#3b82f6"
+              stroke="var(--color-primary)"
               fillOpacity={1}
               fill="url(#colorUtilization)"
             />
@@ -519,7 +546,7 @@ const CargoAnalytics: React.FC = () => {
           </div>
         </Card>
       )}
-    </div>
+    </main>
   )
 }
 

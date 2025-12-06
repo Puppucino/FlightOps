@@ -24,41 +24,46 @@ export const FlightCard = ({ flight }: FlightCardProps) => {
   const riskLevel = getRiskLevel()
 
   return (
-    <div className="flight-card">
+    <article className="flight-card" role="article" aria-labelledby={`flight-${flight.id}-number`}>
       <div className="flight-card-content">
         {/* Icon */}
         <div className="flight-card-icon">
-          <div className="flight-icon-badge">✈️</div>
+          <div className="flight-icon-badge" aria-hidden="true">✈️</div>
         </div>
 
         {/* Main Content */}
         <div className="flight-card-main">
           {/* Flight Number and Route */}
-          <div className="flight-card-header">
+          <header className="flight-card-header">
             <div className="flight-card-title-section">
-              <h3 className="flight-number">{flight.flightNumber}</h3>
+              <h3 className="flight-number" id={`flight-${flight.id}-number`}>{flight.flightNumber}</h3>
               <p className="flight-route">
                 <span>{flight.origin}</span>
-                <span className="route-arrow">→</span>
+                <span className="route-arrow" aria-hidden="true">→</span>
                 <span>{flight.destination}</span>
               </p>
             </div>
             {/* Priority Flag */}
-            <div className={`flight-priority-badge priority-${riskLevel}`} title={`${(delayProb * 100).toFixed(0)}% delay risk`}>
-              {getPriorityIcon()}
+            <div 
+              className={`flight-priority-badge priority-${riskLevel}`} 
+              title={`${(delayProb * 100).toFixed(0)}% delay risk`}
+              aria-label={`Delay risk: ${(delayProb * 100).toFixed(0)}%`}
+              role="status"
+            >
+              <span aria-hidden="true">{getPriorityIcon()}</span>
             </div>
-          </div>
+          </header>
 
           {/* Tags */}
-          <div className="flight-tags">
-            <span className="tag tag-weather">
+          <div className="flight-tags" role="list" aria-label="Flight status tags">
+            <span className="tag tag-weather" role="listitem">
               {flight.weather.conditions.toLowerCase()}
             </span>
-            <span className={`tag tag-risk tag-risk-${riskLevel}`}>
+            <span className={`tag tag-risk tag-risk-${riskLevel}`} role="listitem">
               {(delayProb * 100).toFixed(0)}% risk
             </span>
             {flight.inboundAircraft?.status === 'delayed' && (
-              <span className="tag tag-delayed">
+              <span className="tag tag-delayed" role="listitem">
                 inbound delayed
               </span>
             )}
@@ -84,15 +89,15 @@ export const FlightCard = ({ flight }: FlightCardProps) => {
             </div>
 
             {/* Confidence Badge */}
-            <div className="flight-confidence">
-              <span className="confidence-label">AI</span>
-              <span className="confidence-badge">
+            <div className="flight-confidence" aria-label={`AI prediction confidence: ${(flight.delayPrediction.confidence * 100).toFixed(0)}%`}>
+              <span className="confidence-label" aria-hidden="true">AI</span>
+              <span className="confidence-badge" aria-label={`${(flight.delayPrediction.confidence * 100).toFixed(0)}% confidence`}>
                 {(flight.delayPrediction.confidence * 100).toFixed(0)}%
               </span>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

@@ -11,17 +11,9 @@ const CargoAnalyticsDashboard: React.FC = () => {
   }
 
   return (
-    <div className="cargo-dashboard">
-      <div className="dashboard-view-tabs">
-        <button className="view-tab active">List</button>
-        <button className="view-tab">Board</button>
-        <button className="view-tab">Timeline</button>
-        <button className="view-tab">Table</button>
-        <button className="view-tab">Map</button>
-        <button className="view-tab">+ View</button>
-      </div>
+    <main className="cargo-dashboard" role="main">
       <FlightList onFlightClick={handleFlightClick} />
-    </div>
+    </main>
   )
 }
 

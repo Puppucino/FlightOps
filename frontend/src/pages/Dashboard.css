@@ -3,7 +3,8 @@
   margin: 0 auto;
   padding: 24px;
   min-height: 100vh;
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dashboard-header {
@@ -15,17 +16,17 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-bottom: 16px;
 }
 
 .dashboard-breadcrumb-item {
-  color: #111827;
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
 .dashboard-breadcrumb-separator {
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
 }
 
 .dashboard-view-tabs {
@@ -40,22 +41,22 @@
   padding: 8px 16px;
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dashboard-view-tab:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
 }
 
 .dashboard-view-tab.active {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -68,34 +69,43 @@
 }
 
 .dashboard-action-btn {
-  padding: 8px 16px;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  color: #374151;
+  padding: 9px 18px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .dashboard-action-btn:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border-hover);
+  transform: translateY(-1px);
 }
 
 .dashboard-action-btn.primary {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #ffffff;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 4px rgba(123, 104, 238, 0.2);
+}
+
+.dashboard-action-btn.primary:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--color-bg-primary), 0 0 0 4px var(--color-primary-light);
 }
 
 .dashboard-action-btn.primary:hover {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 4px 8px rgba(123, 104, 238, 0.3);
 }
 
 /* Stats Grid - Modern Clean Design */
@@ -109,20 +119,20 @@
 
 /* Stat Card Styles */
 .stat-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px var(--color-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
 .stat-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px var(--color-shadow-hover);
   transform: translateY(-2px);
-  border-color: #d1d5db;
+  border-color: var(--color-border-hover);
 }
 
 .stat-card-content {
@@ -147,7 +157,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -155,24 +165,25 @@
   font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
-  color: #111827;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
+/* Stat card value colors - Using CSS variables for light/dark mode */
 .stat-card-value.text-red-600 {
-  color: #dc2626;
+  color: var(--color-status-red);
 }
 
 .stat-card-value.text-orange-600 {
-  color: #ea580c;
+  color: var(--color-status-orange);
 }
 
 .stat-card-value.text-green-600 {
-  color: #16a34a;
+  color: var(--color-status-green);
 }
 
 .stat-card-value.text-gray-900 {
-  color: #111827;
+  color: var(--color-text-primary);
 }
 
 .dashboard-groups {
@@ -182,16 +193,17 @@
 }
 
 .dashboard-group {
-  background: #ffffff;
-  border-radius: 8px;
+  background: var(--color-bg-primary);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  transition: box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px var(--color-shadow);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dashboard-group:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px var(--color-shadow-hover);
+  transform: translateY(-2px);
 }
 
 .dashboard-group-header {
@@ -199,27 +211,37 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
   border-left: 4px solid;
   cursor: pointer;
-  transition: background 0.2s ease;
-  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .dashboard-group-header:hover {
-  background: #f3f4f6;
+  background: var(--color-bg-tertiary);
+}
+
+.dashboard-group-header:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
+.dashboard-group-header:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -3px;
 }
 
 .dashboard-group-header.high-risk {
-  border-left-color: #ef4444;
+  border-left-color: var(--color-status-red);
 }
 
 .dashboard-group-header.medium-risk {
-  border-left-color: #f59e0b;
+  border-left-color: var(--color-status-orange);
 }
 
 .dashboard-group-header.low-risk {
-  border-left-color: #10b981;
+  border-left-color: var(--color-status-green);
 }
 
 .dashboard-group-header h3 {
@@ -228,25 +250,30 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #111827;
+  color: var(--color-text-primary);
 }
 
 .dashboard-group-header button {
-  background: rgba(0, 0, 0, 0.05);
-  padding: 4px 8px;
-  border-radius: 4px;
+  background: var(--color-bg-tertiary);
+  padding: 6px 10px;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
-  color: #6b7280;
-  transition: all 0.2s ease;
+  color: var(--color-text-secondary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .dashboard-group-header button:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #374151;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.dashboard-group-header button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .dashboard-group-header button svg {
@@ -255,18 +282,18 @@
 }
 
 .dashboard-group-header span {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--color-bg-tertiary);
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 /* Group Content - Enhanced Styling */
 .dashboard-group-content {
   padding: 20px;
-  background: #ffffff;
+  background: var(--color-bg-primary);
 }
 
 .dashboard-flights-grid {
@@ -295,14 +322,14 @@
 
 /* Enhance FlightCard appearance in grid */
 .dashboard-flights-grid .group {
-  background: #ffffff !important;
-  border-color: #e5e7eb !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  background: var(--color-bg-primary) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: 0 1px 3px var(--color-shadow) !important;
 }
 
 .dashboard-flights-grid .group:hover {
-  border-color: #d1d5db !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  border-color: var(--color-border-hover) !important;
+  box-shadow: 0 8px 16px var(--color-shadow-hover) !important;
 }
 
 .dashboard-add-flight-btn {
@@ -310,13 +337,13 @@
   padding: 12px 20px;
   margin-top: 8px;
   background: transparent;
-  border: 1px dashed #d1d5db;
-  border-radius: 6px;
-  color: #6b7280;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,17 +351,17 @@
 }
 
 .dashboard-add-flight-btn:hover {
-  background: #f9fafb;
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .dashboard-empty-state {
   text-align: center;
   padding: 64px 24px;
-  background: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  background: var(--color-bg-primary);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
   margin-top: 24px;
 }
 
@@ -342,12 +369,12 @@
   width: 64px;
   height: 64px;
   margin: 0 auto 16px;
-  background: #f3f4f6;
+  background: var(--color-bg-tertiary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
 }
 
 .dashboard-empty-icon svg {
@@ -358,13 +385,13 @@
 .dashboard-empty-title {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-text-primary);
   margin-bottom: 8px;
 }
 
 .dashboard-empty-text {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 /* Responsive adjustments */

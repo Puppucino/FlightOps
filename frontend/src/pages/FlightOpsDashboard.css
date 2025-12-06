@@ -3,9 +3,10 @@
 .flight-ops-container {
   position: relative;
   min-height: 100vh;
-  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
+  background: var(--color-bg-secondary);
   padding: 2rem;
   overflow-x: hidden;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-container::before {
@@ -16,8 +17,8 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    radial-gradient(circle at 20% 20%, rgba(123, 104, 238, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(123, 104, 238, 0.1) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -38,16 +39,16 @@
 .flight-ops-title {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover), var(--color-status-purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 0.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-title:hover {
-  background: linear-gradient(135deg, #93c5fd, #c4b5fd, #f9a8d4);
+  background: linear-gradient(135deg, var(--color-primary-hover), var(--color-primary), var(--color-status-purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -55,27 +56,29 @@
 
 .flight-ops-subtitle {
   font-size: 0.875rem;
-  color: #94a3b8;
-  transition: color 0.3s ease;
+  color: var(--color-text-secondary);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-subtitle:hover {
-  color: #cbd5e1;
+  color: var(--color-text-primary);
 }
 
 /* Alerts Section */
 .flight-ops-alerts {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--color-bg-primary);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px var(--color-shadow);
 }
 
 .flight-ops-alerts:hover {
-  border-color: rgba(100, 116, 139, 0.5);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 4px 8px var(--color-shadow-hover);
 }
 
 .flight-ops-alerts-header {
@@ -84,7 +87,7 @@
   gap: 0.5rem;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-text-primary);
   margin-bottom: 1rem;
 }
 
@@ -138,46 +141,51 @@
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
-  background: rgba(30, 41, 59, 0.5);
-  color: #94a3b8;
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
 }
 
 .flight-ops-tab::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-light));
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-tab:hover {
-  background: rgba(51, 65, 85, 0.5);
-  color: #cbd5e1;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
   transform: scale(1.05);
-  border-color: rgba(100, 116, 139, 0.5);
+  border-color: var(--color-border-hover);
 }
 
 .flight-ops-tab:hover::before {
-  opacity: 1;
+  opacity: 0.3;
 }
 
 .flight-ops-tab.active {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(123, 104, 238, 0.3);
   transform: scale(1.05);
   margin-left: 0.625rem;
 }
 
+.flight-ops-tab.active:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .flight-ops-tab.active::before {
-  opacity: 1;
+  opacity: 0;
 }
 
 .flight-ops-tab.active::after {
@@ -187,23 +195,25 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
   animation: pulse 2s ease-in-out infinite;
 }
 
 /* Content Section */
 .flight-ops-content {
-  background: rgba(30, 41, 59, 0.3);
+  background: var(--color-bg-primary);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 1.5rem;
   padding: 2rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeIn 0.5s ease-out;
+  box-shadow: 0 1px 3px var(--color-shadow);
 }
 
 .flight-ops-content:hover {
-  border-color: rgba(100, 116, 139, 0.5);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 4px 8px var(--color-shadow-hover);
 }
 
 /* Stats Grid */
@@ -215,37 +225,69 @@
 }
 
 .flight-ops-stat-card {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  box-shadow: 0 1px 3px var(--color-shadow);
 }
 
 .flight-ops-stat-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 24px var(--color-shadow-hover);
+  border-color: var(--color-primary);
+}
+
+.flight-ops-stat-card:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.flight-ops-stat-card:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Stat card color variants */
+.flight-ops-stat-card-red {
+  background: linear-gradient(135deg, var(--color-status-red-light), transparent);
+  border-color: var(--color-status-red);
+  border-opacity: 0.2;
+}
+
+.flight-ops-stat-card-yellow {
+  background: linear-gradient(135deg, var(--color-status-yellow-light), transparent);
+  border-color: var(--color-status-yellow);
+  border-opacity: 0.2;
+}
+
+.flight-ops-stat-label-red {
+  color: var(--color-status-red);
+}
+
+.flight-ops-stat-label-yellow {
+  color: var(--color-status-yellow);
 }
 
 .flight-ops-stat-label {
   font-size: 0.875rem;
-  color: #60a5fa;
+  color: var(--color-primary);
   font-weight: 500;
   margin-bottom: 0.5rem;
-  transition: color 0.3s ease;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-stat-card:hover .flight-ops-stat-label {
-  color: #93c5fd;
+  color: var(--color-primary-hover);
 }
 
 .flight-ops-stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #ffffff;
-  transition: transform 0.3s ease;
+  color: var(--color-text-primary);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-stat-card:hover .flight-ops-stat-value {
@@ -260,21 +302,39 @@
 }
 
 .flight-ops-flight-card {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--color-bg-primary);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.25rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   animation: slideInUp 0.5s ease-out;
+  box-shadow: 0 1px 3px var(--color-shadow);
 }
 
 .flight-ops-flight-card:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  border-color: rgba(100, 116, 139, 0.5);
-  background: rgba(30, 41, 59, 0.7);
+  box-shadow: 0 8px 24px var(--color-shadow-hover);
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-secondary);
+}
+
+.flight-ops-flight-card:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
+.flight-ops-flight-card:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
+.flight-ops-tab:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .flight-ops-flight-header {
@@ -293,40 +353,40 @@
 .flight-ops-flight-icon {
   width: 3rem;
   height: 3rem;
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--color-primary-light);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-flight-card:hover .flight-ops-flight-icon {
-  background: rgba(59, 130, 246, 0.3);
+  background: var(--color-primary);
   transform: scale(1.1);
 }
 
 .flight-ops-flight-details h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-primary);
   margin: 0 0 0.25rem 0;
-  transition: color 0.3s ease;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-flight-card:hover .flight-ops-flight-details h3 {
-  color: #93c5fd;
+  color: var(--color-primary);
 }
 
 .flight-ops-flight-details p {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   margin: 0;
-  transition: color 0.3s ease;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-flight-card:hover .flight-ops-flight-details p {
-  color: #cbd5e1;
+  color: var(--color-text-primary);
 }
 
 /* Status Badges */
@@ -343,22 +403,26 @@
   transform: scale(1.05);
 }
 
+/* Status badges - Using CSS variables for light/dark mode */
 .flight-ops-status-badge.at-risk {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-status-red-light);
+  color: var(--color-status-red);
+  border: 1px solid var(--color-status-red);
+  border-opacity: 0.3;
 }
 
 .flight-ops-status-badge.warning {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--color-status-yellow-light);
+  color: var(--color-status-yellow);
+  border: 1px solid var(--color-status-yellow);
+  border-opacity: 0.3;
 }
 
 .flight-ops-status-badge.on-time {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--color-status-green-light);
+  color: var(--color-status-green);
+  border: 1px solid var(--color-status-green);
+  border-opacity: 0.3;
 }
 
 /* Risk Badge */
@@ -375,70 +439,96 @@
   transform: scale(1.1);
 }
 
+/* Risk badges - Using CSS variables for light/dark mode */
 .flight-ops-risk-badge.high {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-status-red);
+  background: var(--color-status-red-light);
+  border-color: var(--color-status-red);
+  border-opacity: 0.2;
 }
 
 .flight-ops-risk-badge.medium {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.2);
+  color: var(--color-status-orange);
+  background: var(--color-status-orange-light);
+  border-color: var(--color-status-orange);
+  border-opacity: 0.2;
 }
 
 .flight-ops-risk-badge.low {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.2);
+  color: var(--color-status-green);
+  background: var(--color-status-green-light);
+  border-color: var(--color-status-green);
+  border-opacity: 0.2;
 }
 
 /* Passenger Flow Section */
 .flight-ops-passenger-section {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary);
   border-radius: 1rem;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-ops-passenger-section:hover {
-  border-color: rgba(139, 92, 246, 0.4);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(123, 104, 238, 0.2);
 }
 
 .flight-ops-passenger-item {
-  background: rgba(30, 41, 59, 0.3);
+  background: var(--color-bg-secondary);
   border-radius: 0.5rem;
   padding: 1rem;
   margin-bottom: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  border: 1px solid var(--color-border);
 }
 
 .flight-ops-passenger-item:hover {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--color-bg-tertiary);
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px var(--color-shadow);
 }
 
 /* Cargo Section */
 .flight-ops-cargo-item {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--color-bg-primary);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  box-shadow: 0 1px 3px var(--color-shadow);
 }
 
 .flight-ops-cargo-item:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  border-color: rgba(100, 116, 139, 0.5);
-  background: rgba(30, 41, 59, 0.7);
+  box-shadow: 0 8px 24px var(--color-shadow-hover);
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-secondary);
+}
+
+.flight-ops-cargo-item:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.flight-ops-cargo-item:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.flight-ops-passenger-item:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.flight-ops-passenger-item:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Animations */

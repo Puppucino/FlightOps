@@ -2,8 +2,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
   min-height: 100%;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-list-loading,
@@ -13,25 +14,42 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-list-error button {
   margin-top: 16px;
   padding: 8px 16px;
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary);
+  color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(123, 104, 238, 0.2);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.flight-list-error button:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(123, 104, 238, 0.3);
+}
+
+.flight-list-error button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--color-bg-primary), 0 0 0 4px var(--color-primary-light);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -48,10 +66,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
   gap: 16px;
   flex-wrap: wrap;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .controls-left,
@@ -64,45 +84,61 @@
 .group-selector,
 .filter-selector {
   padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #374151;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.group-selector:hover,
+.filter-selector:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-secondary);
+}
+
+.group-selector:focus,
+.filter-selector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .search-input {
   padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #374151;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font-size: 13px;
   min-width: 200px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .customize-btn {
   padding: 8px 16px;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  color: #374151;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .customize-btn:hover {
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border-hover);
 }
 
 .flight-list-groups {
@@ -113,10 +149,16 @@
 
 .flight-group {
   margin-bottom: 24px;
-  background: #ffffff;
-  border-radius: 8px;
+  background: var(--color-bg-primary);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--color-shadow);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flight-group:hover {
+  box-shadow: 0 8px 16px var(--color-shadow-hover);
 }
 
 .flight-group-header {
@@ -124,14 +166,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
   border-left: 4px solid;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .flight-group-header:hover {
-  background: #f3f4f6;
+  background: var(--color-bg-tertiary);
 }
 
 .group-header-left {
@@ -142,21 +184,45 @@
 
 .group-toggle {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   width: 16px;
 }
 
 .group-name {
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.flight-group-header:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
+.flight-group-header:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 .group-count {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
@@ -169,16 +235,16 @@
   padding: 12px 20px;
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s ease;
-  border-top: 1px solid #e5e7eb;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top: 1px solid var(--color-border);
 }
 
 .add-flight-btn:hover {
-  background: #f9fafb;
-  color: #374151;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
 }
