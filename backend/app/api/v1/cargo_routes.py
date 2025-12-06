@@ -1,12 +1,13 @@
 """API v1 routes for cargo capacity prediction"""
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
+from datetime import datetime, date, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.services.ml_service import MLService
+from app.services.traffic_estimator import TrafficEstimator
 from app.models.flight import Flight
 from app.models.aircraft import Aircraft, AircraftType
 from app.models.airport import Airport
@@ -339,4 +340,185 @@ async def get_cargo_analytics(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get cargo analytics: {str(e)}"
+        )
+
+
+@router.get("/calendar")
+async def get_cargo_calendar(
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+    db: Session = Depends(get_db),
+    ml_service: MLService = Depends(get_ml_service)
+):
+    """
+    Get calendar view of upcoming flights with cargo utilization predictions
+    
+    Returns flights for the specified month/year (or current month if not specified)
+    with traffic estimates and cargo predictions based on peak seasons
+    """
+    try:
+        # Use current date if not specified
+        today = date.today()
+        target_year = year or today.year
+        target_month = month or today.month
+        
+        # Calculate date range for the month
+        start_date = date(target_year, target_month, 1)
+        if target_month == 12:
+            end_date = date(target_year + 1, 1, 1)
+        else:
+            end_date = date(target_year, target_month + 1, 1)
+        
+        # Get flights in the date range
+        start_datetime = datetime.combine(start_date, datetime.min.time())
+        end_datetime = datetime.combine(end_date, datetime.min.time())
+        
+        # Get all flights in the requested month/year range
+        # This ensures calendar view shows flights for the selected month
+        # Use the same filtering logic as the list view endpoint
+        flights_query = db.query(Flight).filter(
+            Flight.scheduled_departure >= start_datetime,
+            Flight.scheduled_departure < end_datetime,
+            Flight.flight_type.in_(['passenger', 'mixed', 'cargo']),
+            Flight.passenger_count.isnot(None)
+        )
+        
+        flights = flights_query.order_by(Flight.scheduled_departure.asc()).all()
+        
+        # Debug: Log flight count
+        print(f"Calendar endpoint: Found {len(flights)} flights for {target_year}-{target_month}")
+        if len(flights) > 0:
+            print(f"  First flight: {flights[0].flight_number} on {flights[0].scheduled_departure}")
+        
+        # If no flights in requested month, try to find the first month with flights
+        # Only auto-navigate if year/month not explicitly provided (default/current month)
+        # This prevents infinite loops when user explicitly requests a month with no flights
+        if len(flights) == 0 and not year and not month:
+            # Find first month with flights
+            first_flight = db.query(Flight).filter(
+                Flight.flight_type.in_(['passenger', 'mixed', 'cargo']),
+                Flight.passenger_count.isnot(None),
+                Flight.scheduled_departure >= datetime.now()
+            ).order_by(Flight.scheduled_departure.asc()).first()
+            
+            if first_flight:
+                first_date = first_flight.scheduled_departure.date()
+                # Update target to first month with flights
+                target_year = first_date.year
+                target_month = first_date.month
+                start_date = date(target_year, target_month, 1)
+                if target_month == 12:
+                    end_date = date(target_year + 1, 1, 1)
+                else:
+                    end_date = date(target_year, target_month + 1, 1)
+                start_datetime = datetime.combine(start_date, datetime.min.time())
+                end_datetime = datetime.combine(end_date, datetime.min.time())
+                
+                flights = db.query(Flight).filter(
+                    Flight.scheduled_departure >= start_datetime,
+                    Flight.scheduled_departure < end_datetime,
+                    Flight.flight_type.in_(['passenger', 'mixed', 'cargo']),
+                    Flight.passenger_count.isnot(None)
+                ).order_by(Flight.scheduled_departure.asc()).all()
+                
+                print(f"Calendar endpoint: Auto-navigated to {first_date.year}-{first_date.month}, found {len(flights)} flights")
+                
+                # Update return values to reflect the month we're actually showing
+                target_year = first_date.year
+                target_month = first_date.month
+        
+        # Initialize traffic estimator
+        traffic_estimator = TrafficEstimator()
+        
+        # Get peak seasons for the month
+        peak_seasons = traffic_estimator.get_peak_seasons_for_month(target_year, target_month)
+        
+        result = []
+        for flight in flights:
+            # Get related data
+            origin = db.query(Airport).filter(Airport.id == flight.origin_airport_id).first()
+            dest = db.query(Airport).filter(Airport.id == flight.destination_airport_id).first()
+            aircraft = db.query(Aircraft).filter(Aircraft.id == flight.aircraft_id).first()
+            
+            # Get aircraft type
+            aircraft_type_str = "Unknown"
+            if aircraft:
+                aircraft_type = db.query(AircraftType).filter(AircraftType.id == aircraft.aircraft_type_id).first()
+                if aircraft_type:
+                    aircraft_type_str = f"{aircraft_type.manufacturer} {aircraft_type.model}"
+            
+            # Get flight date
+            flight_date = flight.scheduled_departure.date() if flight.scheduled_departure else today
+            pax_count = flight.passenger_count or 0
+            
+            # Estimate traffic
+            route = f"{origin.iata_code}-{dest.iata_code}" if origin and dest else None
+            traffic_est = traffic_estimator.estimate_passenger_traffic(
+                base_passenger_count=pax_count,
+                flight_date=flight_date,
+                route=route
+            )
+            
+            # Get cargo prediction if we have passenger data
+            cargo_prediction = None
+            if pax_count > 0 and origin and dest:
+                try:
+                    days_before = (flight_date - today).days
+                    days_before = max(0, days_before)  # Don't use negative days
+                    
+                    cargo_prediction = ml_service.predict_available_cargo_capacity(
+                        aircraft_type=aircraft_type_str,
+                        passenger_count=traffic_est["estimated_passenger_count"],
+                        origin=origin.iata_code,
+                        destination=dest.iata_code,
+                        flight_date=flight.scheduled_departure,
+                        fuel_weight_kg=float(flight.fuel_weight_kg) if flight.fuel_weight_kg else None,
+                        days_before_flight=days_before
+                    )
+                except Exception as e:
+                    # If prediction fails, continue without it
+                    print(f"Warning: Failed to predict cargo for flight {flight.id}: {e}")
+            
+            result.append({
+                "flight_id": str(flight.id),
+                "flight_number": flight.flight_number,
+                "date": flight_date.isoformat(),
+                "scheduled_departure": flight.scheduled_departure.isoformat() if flight.scheduled_departure else None,
+                "origin": origin.iata_code if origin else "N/A",
+                "destination": dest.iata_code if dest else "N/A",
+                "route": route,
+                "aircraft_type": aircraft_type_str,
+                "passenger_count": pax_count,
+                "traffic_estimation": traffic_est,
+                "cargo_prediction": cargo_prediction,
+                "utilization_percentage": cargo_prediction.get("utilization_percentage", 0) if cargo_prediction else 0,
+                "available_weight_kg": cargo_prediction.get("available_weight_kg", 0) if cargo_prediction else 0,
+                "available_volume_m3": cargo_prediction.get("available_volume_m3", 0) if cargo_prediction else 0,
+                "overbooking_risk": cargo_prediction.get("overbooking_risk", "low") if cargo_prediction else "low",
+            })
+        
+        # Debug: Log final response
+        print(f"Calendar endpoint: Returning {len(result)} flights for {target_year}-{target_month}")
+        
+        return {
+            "year": target_year,
+            "month": target_month,
+            "peak_seasons": [
+                {
+                    "date": p["date"].isoformat(),
+                    "day": p["day"],
+                    "multiplier": p["multiplier"],
+                    "type": p["type"],
+                    "is_holiday": p["is_holiday"],
+                    "is_school_holiday": p["is_school_holiday"],
+                }
+                for p in peak_seasons
+            ],
+            "flights": result
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get cargo calendar: {str(e)}"
         )

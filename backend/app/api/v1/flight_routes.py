@@ -2,11 +2,13 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime
 
 from app.core.database import get_db
 from app.models.flight import Flight
 from app.models.aircraft import Aircraft, AircraftType
 from app.models.airport import Airport
+from app.models.airline import Airline
 
 router = APIRouter(prefix="/flights", tags=["Flights"])
 
@@ -17,12 +19,27 @@ async def get_cargo_flights(db: Session = Depends(get_db)):
     Get all flights with cargo data
     
     Returns list of flights suitable for cargo analytics
+    Prioritizes future flights over past flights
     """
     try:
+        # Get current datetime for filtering
+        now = datetime.now()
+        
+        # First try to get future flights (upcoming flights)
         flights = db.query(Flight).filter(
             Flight.flight_type.in_(['passenger', 'mixed', 'cargo']),
-            Flight.passenger_count.isnot(None)
-        ).limit(100).all()
+            Flight.passenger_count.isnot(None),
+            Flight.scheduled_departure >= now
+        ).order_by(Flight.scheduled_departure.asc()).limit(100).all()
+        
+        # If we don't have enough future flights, also include recent past flights
+        if len(flights) < 50:
+            past_flights = db.query(Flight).filter(
+                Flight.flight_type.in_(['passenger', 'mixed', 'cargo']),
+                Flight.passenger_count.isnot(None),
+                Flight.scheduled_departure < now
+            ).order_by(Flight.scheduled_departure.desc()).limit(100 - len(flights)).all()
+            flights.extend(past_flights)
         
         result = []
         for flight in flights:
@@ -38,10 +55,17 @@ async def get_cargo_flights(db: Session = Depends(get_db)):
                 if aircraft_type:
                     aircraft_type_str = f"{aircraft_type.manufacturer} {aircraft_type.model}"
             
+            # Get airline name
+            airline_name = "American Airlines"  # Default
+            if flight.airline_id:
+                airline = db.query(Airline).filter(Airline.id == flight.airline_id).first()
+                if airline:
+                    airline_name = airline.name
+            
             result.append({
                 "id": str(flight.id),
                 "flight_number": flight.flight_number,
-                "airline_name": "Airline AB",  # TODO: Get from airline relation
+                "airline_name": airline_name,
                 "aircraft_registration": aircraft.registration if aircraft else "N/A",
                 "aircraft_type": aircraft_type_str,
                 "origin_airport": origin.name if origin else "Unknown",

@@ -4,7 +4,7 @@
  */
 import { apiClient } from './client'
 import { CargoAnalyticsData, StorageAvailability, CargoLoadingProgress, FlightDetails } from '../types'
-import { generateMockCargoAnalytics, generateMockFlights } from '../utils/mockData'
+import { generateMockCargoAnalytics, generateMockFlights, generateMockCargoCalendar } from '../utils/mockData'
 
 // Set to true to use mock data when backend is not available
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false
@@ -121,6 +121,78 @@ export const getCargoFlights = async (): Promise<FlightDetails[]> => {
   } catch (error) {
     console.warn('API call failed, using mock data:', error)
     return generateMockFlights()
+  }
+}
+
+/**
+ * Fetch cargo calendar with predictions
+ */
+export interface CargoCalendarResponse {
+  year: number
+  month: number
+  peak_seasons: Array<{
+    date: string
+    day: number
+    multiplier: number
+    type: 'holiday' | 'school_holiday' | 'peak_season'
+    is_holiday: boolean
+    is_school_holiday: boolean
+  }>
+  flights: Array<{
+    flight_id: string
+    flight_number: string
+    date: string
+    scheduled_departure: string
+    origin: string
+    destination: string
+    route: string
+    aircraft_type: string
+    passenger_count: number
+    traffic_estimation: {
+      base_passenger_count: number
+      estimated_passenger_count: number
+      traffic_multiplier: number
+      is_holiday: boolean
+      is_school_holiday: boolean
+      is_weekend: boolean
+      peak_season_type: string | null
+      month: number
+      day_of_week: string
+    }
+    cargo_prediction: any
+    utilization_percentage: number
+    available_weight_kg: number
+    available_volume_m3: number
+    overbooking_risk: string
+  }>
+}
+
+export const getCargoCalendar = async (
+  year?: number,
+  month?: number
+): Promise<CargoCalendarResponse> => {
+  if (USE_MOCK_DATA) {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    // Return comprehensive mock calendar data
+    return generateMockCargoCalendar(year, month)
+  }
+  
+  try {
+    const params = new URLSearchParams()
+    if (year) params.append('year', year.toString())
+    if (month) params.append('month', month.toString())
+    
+    const response = await apiClient.get(`/api/v1/cargo/calendar?${params.toString()}`)
+    return response.data
+  } catch (error) {
+    console.warn('API call failed, using mock data:', error)
+    const today = new Date()
+    return {
+      year: year || today.getFullYear(),
+      month: month || today.getMonth() + 1,
+      peak_seasons: [],
+      flights: []
+    }
   }
 }
 
