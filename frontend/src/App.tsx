@@ -1,30 +1,35 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Sidebar } from './components/Sidebar'
-import { Header } from './components/Header'
+import { Layout } from './components/Layout'
 import CargoAnalytics from './pages/CargoAnalytics'
 import CargoAnalyticsDashboard from './pages/CargoAnalyticsDashboard'
+import { Dashboard } from './pages/Dashboard'
+import FlightOpsDashboard from './pages/FlightOpsDashboard'
 import './App.css'
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Sidebar />
-        <div className="main-content">
-          <Header />
-          <main className="main-body">
-            <Routes>
-              <Route path="/" element={<CargoAnalyticsDashboard />} />
-              <Route path="/cargo-analytics" element={<CargoAnalyticsDashboard />} />
-              <Route path="/cargo-analytics/:flightId" element={<CargoAnalytics />} />
-              <Route path="/cargo-analytics/flight/:flightNumber" element={<CargoAnalytics />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/flight-ops" element={<FlightOpsDashboard />} />
+        <Route path="/cargo-analytics" element={
+          <Layout>
+            <CargoAnalyticsDashboard />
+          </Layout>
+        } />
+        <Route path="/cargo-analytics/:flightId" element={
+          <Layout showBackButton>
+            <CargoAnalytics />
+          </Layout>
+        } />
+        <Route path="/cargo-analytics/flight/:flightNumber" element={
+          <Layout showBackButton>
+            <CargoAnalytics />
+          </Layout>
+        } />
+      </Routes>
     </Router>
   )
 }
 
 export default App
-

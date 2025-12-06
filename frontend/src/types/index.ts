@@ -93,3 +93,20 @@ export interface CargoAnalyticsData {
   prediction: CargoPrediction
 }
 
+// Flight Delay Prediction Types
+export interface Flight {
+  id: string
+  flightNumber: string
+  origin: string
+  destination: string
+  scheduledDeparture: string
+  scheduledArrival: string
+  delayPrediction: FlightDelayPrediction
+  weather: WeatherData
+  inboundAircraft: {
+    flightNumber: string
+    status: 'on-time' | 'delayed' | 'arrived'
+    delayMinutes: number
+  } | null
+  airportTraffic: AirportTraffic
+}
