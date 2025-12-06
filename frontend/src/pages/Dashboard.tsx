@@ -12,10 +12,9 @@ type GroupBy = "status" | "route" | "none"
 
 export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("")
-  const [riskFilter, setRiskFilter] = useState<RiskFilter>("all")
-  const [sortBy, setSortBy] = useState<SortOption>("delay")
-  const [groupBy, setGroupBy] = useState<GroupBy>("status")
-  const [showFilters, setShowFilters] = useState(false)
+  const [riskFilter] = useState<RiskFilter>("all")
+  const [sortBy] = useState<SortOption>("delay")
+  const [groupBy] = useState<GroupBy>("status")
 
   const flights = mockFlights
 
@@ -185,26 +184,22 @@ export const Dashboard = () => {
           {Object.entries(groupedFlights).map(([groupName, groupFlights]) => (
             <div key={groupName} className="dashboard-group">
               {/* Group Header */}
-              <div className={`dashboard-group-header ${getGroupColor(groupName).replace('bg-', '').replace('-500', '').toLowerCase()}-risk`}>
+              <div className={`dashboard-group-header ${getGroupColor(groupName)}-risk`}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '4px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                  <button>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, textTransform: 'uppercase' }}>
-                    {groupName}
-                  </h3>
-                  <span style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 500 }}>
-                    {groupFlights.length}
-                  </span>
+                  <h3>{groupName}</h3>
+                  <span>{groupFlights.length}</span>
                 </div>
               </div>
 
               {/* Flight Cards Grid */}
               <div className="dashboard-group-content">
                 <div className="dashboard-flights-grid">
-                  {groupFlights.map((flight, index) => (
+                  {groupFlights.map((flight) => (
                     <div key={flight.id}>
                       <FlightCard flight={flight} />
                     </div>
