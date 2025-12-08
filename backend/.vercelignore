@@ -1,0 +1,92 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in deployment)
+*.md
+README.md
+VERCEL_DEPLOYMENT.md
+
+# Scripts (not needed in serverless)
+scripts/
+demo_*.py
+
+# Alembic versions (migrations are run separately)
+alembic/versions/
+
+# Test files
+*_test.py
+test_*.py
+tests/
+
+# Git
+.git/
+.gitignore
+
+# Vercel
+.vercel/
+
+# Large data files (if any)
+*.csv
+*.json.gz
+*.parquet
+
+# Exclude unnecessary files for deployment
+demo_flight_delay_prediction.py
+alembic.ini
+alembic/
+
+# Note: Models are needed at runtime, so they must be included
+# If models are too large, consider:
+# 1. Using external storage (S3, etc.) and loading at runtime
+# 2. Compressing models
+# 3. Using smaller/optimized models

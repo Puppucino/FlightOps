@@ -42,3 +42,6 @@ build/
 
 assets/
 models/data/flights_weather_2019_cleaned.csv
+
+.vercel
+.env*.local
